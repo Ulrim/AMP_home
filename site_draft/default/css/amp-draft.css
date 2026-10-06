@@ -371,3 +371,28 @@ a.amp-card:hover img{transform:scale(1.05)}
   .amp-bhead .no{font-size:42px}
   .amp-heritage .thumbs{grid-template-columns:repeat(3,1fr)}
 }
+
+/* ───── 사진 자리(플레이스홀더) – 사진 수령 후 자동으로 대체됨 ───── */
+.amp-ph{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:2px dashed #8fbad6;border-radius:14px;color:var(--blue-d);background:repeating-linear-gradient(135deg,#f3f8fc 0 14px,#e8f1f8 14px 28px)}
+.amp-ph>div{display:grid;gap:4px;justify-items:center;max-width:92%}
+.amp-ph svg{font-size:30px;margin-bottom:2px}
+.amp-ph b{font-size:14px}
+.amp-ph span{font-size:14px;color:var(--ink);font-weight:600;line-height:1.4}
+.amp-ph small{font-size:11px;color:var(--ink-soft);word-break:normal;overflow-wrap:break-word;line-height:1.5}
+.amp-card .imgwrap .amp-ph{border-radius:0;border-width:0 0 2px 0}
+.amp-field .amp-ph{position:absolute;inset:0;z-index:-2;height:100%;aspect-ratio:auto !important;border:0;border-radius:0;align-items:flex-start;padding-top:92px;color:#bfe6f2;background:radial-gradient(circle at 80% 15%,rgba(22,184,199,.45),transparent 55%),linear-gradient(160deg,var(--navy2),var(--blue))}
+.amp-field .amp-ph span{color:#fff}
+.amp-field .amp-ph small{color:#a9cfe0}
+.amp-panel .amp-ph{border-color:rgba(255,255,255,.45);color:#d6f4f8;background:rgba(255,255,255,.06)}
+.amp-panel .amp-ph span{color:#fff}
+.amp-panel .amp-ph small{color:#bcdcea}
+.amp-heritage .thumbs .amp-ph{padding:6px}
+.amp-heritage .thumbs .amp-ph span{font-size:12px}
+.amp-heritage .thumbs .amp-ph small{display:none}
+.amp-ph,.amp-ph>div{min-width:0}
+.amp-ph span,.amp-ph b{overflow-wrap:anywhere}
+.amp-heritage .thumbs{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:600px){
+  .amp-heritage .thumbs .amp-ph b,.amp-heritage .thumbs .amp-ph svg{display:none}
+  .amp-heritage .thumbs .amp-ph span{font-size:11px}
+}

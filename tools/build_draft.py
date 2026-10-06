@@ -22,12 +22,53 @@ def todo(text):
     return f'<span class="todo">[{text}]</span>'
 
 
+IMG_DIR = ROOT / "default" / "img"
+DEFAULT_SPEC = "가로형(4:3 권장) · 가로 1600px 이상 · JPG"
+# 사진이 아직 없는 자리. 같은 파일명으로 default/img/<key>.jpg 를 넣고 다시 빌드하면 자동으로 채워진다.
+# key: (필요한 사진, 규격/비고, 비율, 선택 여부)
+PHOTO_SPEC = {
+    "pilot-01": ("이차전지 폐수처리 Pilot 설비 전경(정면)", "설비 전체가 보이게", "4/3", False),
+    "pilot-02": ("이차전지 폐수처리 Pilot 설비(다른 각도)", "", "4/3", False),
+    "reactor-lab-01": ("전구체 공침반응기 전경", "반응기 본체와 교반부가 보이게", "4/3", False),
+    "reactor-lab-02": ("공침반응기 제어부(펌프·pH 제어)", "", "4/3", False),
+    "module-a1": ("공정수 재순환 현장 맞춤형 시스템 전경", "", "4/3", False),
+    "module-a2": ("공정수 재순환 모듈 설치 구성(다른 각도)", "", "4/3", False),
+    "module-b1": ("전구체 입자선별 및 필터 장치", "", "4/3", False),
+    "module-b2": ("입자선별 필터 장치(다른 각도)", "", "4/3", False),
+    "monitor-screen": ("실시간 모니터링 프로그램(AMP) 화면 캡처", "스크린샷 원본 PNG · 16:9 · 시험 데이터만 보이게", "16/9", False),
+    "pharma-01": ("제약공정 수처리 시스템 제작·설치 사진", "", "4/3", False),
+    "pharma-02": ("제약공정 수처리 시스템(다른 각도)", "", "4/3", True),
+    "supply-01": ("원료 가공·소모품 납품 사진", "", "4/3", True),
+    "product-header-pipe": ("Clad AL Header Pipe 제품", "정사각 또는 4:3 · 단색 배경", "4/3", False),
+    "product-pipe-assembly": ("Clad AL Pipe 및 Assembly", "", "4/3", False),
+    "product-heat-exchanger": ("열교환기(콘덴서·에바) 적용품", "", "4/3", False),
+    "product-atf-warmer": ("ATF Warmer", "", "4/3", False),
+    "product-ev-cooler": ("전기차 배터리 Cooler", "", "4/3", False),
+    "product-tube-stack": ("D-type 실내기(증발기) 또는 튜브 적층 가공품", "", "4/3", False),
+    "air-case-01": ("공조부품 납품 사례 1 (기존 갤러리 원본)", "현 홈페이지 gallery01 사진", "4/3", False),
+    "air-case-02": ("공조부품 납품 사례 2 (기존 갤러리 원본)", "", "4/3", False),
+    "air-case-03": ("공조부품 납품 사례 3 (기존 갤러리 원본)", "", "4/3", False),
+}
+PH_USED = {}  # key -> set(페이지)
+
+
+def placeholder(name, alt):
+    title, spec, ratio, optional = PHOTO_SPEC.get(name, (alt, "", "4/3", False))
+    PH_USED.setdefault(name, set())
+    opt = "(선택) " if optional else ""
+    return (f'<div class="amp-ph" data-ph="{name}" style="aspect-ratio:{ratio}" role="img" aria-label="사진 필요: {title}">'
+            f'<div>{ico("camera")}<b>{opt}사진 필요</b><span>{title}</span><small>{name}.jpg · {spec or DEFAULT_SPEC}</small></div></div>')
+
+
 def img(name, alt, ext="jpg", cls=""):
+    if ext == "jpg" and not (IMG_DIR / f"{name}.jpg").exists():
+        return placeholder(name, alt)
     c = f' class="{cls}"' if cls else ""
     return f'<img src="/default/img/{name}.{ext}" alt="{alt}" loading="lazy"{c}>'
 
 
 ICONS = {
+    "camera": "M4 8h3l2-3h6l2 3h3v11H4z M12 11a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z",
     "drop": "M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z",
     "battery": "M3 8h15v8H3z M18 10.5h2v3h-2 M9 9.5l-2 3h3l-2 3",
     "recycle": "M20 12a8 8 0 0 1-13.7 5.6 M4 12a8 8 0 0 1 13.7-5.6 M17.7 3v3.4h-3.4 M6.3 21v-3.4h3.4",
@@ -131,7 +172,7 @@ def footer():
 def subhead(h1, crumbs, lead="", kind="water", bg=None):
     crumb = " &gt; ".join(f'<a href="{c[1]}">{c[0]}</a>' if isinstance(c, tuple) else c for c in crumbs)
     p = f"<p>{lead}</p>" if lead else ""
-    bgd = (f'<div class="bg" style="background-image:url(/default/img/{bg}.jpg)"></div>') if bg else ""
+    bgd = (f'<div class="bg" style="background-image:url(/default/img/{bg}.jpg)"></div>') if bg and (IMG_DIR / f"{bg}.jpg").exists() else ""
     w = waves() if kind != "air" else ""
     return (f'<div class="amp-subhead {"air" if kind == "air" else ""}">{bgd}<div class="amp-wrap">'
             f'<div class="amp-crumb"><a href="/default/index.html">HOME</a> &gt; {crumb}</div><h1>{h1}</h1>{p}</div>{w}</div>')
@@ -176,6 +217,9 @@ def write(path, title, desc, body, section="", extra_head=""):
 </body>
 </html>
 '''
+    for k in PH_USED:
+        if f'data-ph="{k}"' in html:
+            PH_USED[k].add(path)
     out = ROOT / path.lstrip("/")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
@@ -196,7 +240,7 @@ FIELDS = [  # key, 아이콘, 제목, 설명, 이미지, 링크
     ("battery", "battery", "이차전지 폐수처리", "망초폐수·고염폐수 처리, 전구체 공침 공정 장비", "pilot-01", "/default/water/battery.html"),
     ("recycle", "recycle", "공정수 재순환", "재이용 시스템, 입자선별·필터 장치", "module-a1", "/default/water/recycle.html"),
     ("aqua", "fish", "육상양식 물관리", "RAS·BFT 수질 모니터링, 미생물 배양수조", "aqua-02", "/default/water/aquaculture.html"),
-    ("pharma", "flask", "제약·화학 폐수처리", "원수 분석 기반 맞춤형 수처리 시스템", None, "/default/water/pharma.html"),
+    ("pharma", "flask", "제약·화학 폐수처리", "원수 분석 기반 맞춤형 수처리 시스템", "pharma-01", "/default/water/pharma.html"),
 ]
 PROC = [("search", "현장·수질 진단"), ("target", "처리목표 설정"), ("pencil", "공정설계"), ("flask", "Pilot/시제품 제작"),
         ("wrench", "설비 제작·설치"), ("play", "시운전"), ("activity", "모니터링·유지관리")]
@@ -430,7 +474,6 @@ def build_air():
 <ul class="amp-prose"><li>Clad Aluminum Header Pipe</li><li>Clad AL Pipe &amp; Assembly</li><li>ATF Warmer</li>
 <li>전기차 배터리 Cooler</li><li>D-type 실내기(증발기)</li></ul>
 <div class="amp-gallery" style="margin-top:20px">{gal}</div>
-<p class="amp-prose" style="margin-top:14px">{todo("제품 사진 원본 수령 후 교체 (현재 현 홈페이지 캡처 크롭)")}</p>
 {cta("air", "공조부품(Clad AL Header Pipe)", water=False)}''')
 
     qs = "".join(f'<figure class="amp-figure">{img(n, a)}<figcaption>{a}</figcaption></figure>' for n, a in [
@@ -545,7 +588,7 @@ def build_water():
         "<p>공정수 사용량과 폐수 배출량이 늘면서 원가와 ESG 부담이 커지고 있습니다.</p>",
         flowline([("search", "현장·수질 진단", "원수 확인"), ("tank", "재순환 모듈", "현장 맞춤 설계"), ("filter", "입자선별·필터", "고형물 분리"), ("activity", "모니터링 연동", "수질 확인")]) +
         checks(["현장 맞춤형 재순환 모듈", "입자선별·필터 장치", "수질 모니터링 연동"]),
-        '<p class="amp-prose">공정수 재순환 현장 맞춤형 시스템을 제작했습니다. ' + todo("모듈 사진 매핑 확인(콜라주 하단 좌측 2컷 가정)") + '</p>' +
+        '<p class="amp-prose">공정수 재순환 현장 맞춤형 시스템을 제작했습니다.</p>' +
         gallery([("module-a1", "공정수 재순환 현장 맞춤형 시스템"), ("module-a2", "재순환 모듈 설치 구성")], "c2"))
 
     field_page("/default/water/aquaculture.html", "aqua", "육상양식 물관리", "육상양식 물관리",
@@ -568,13 +611,13 @@ def build_water():
         flowline([("flask", "원수 분석", "성상 파악"), ("target", "공정 구성", "처리목표 기반"), ("tank", "맞춤 제작", "소규모·Pilot"), ("play", "설치·시운전", "처리 확인")]) +
         checks(["원수 분석 결과를 기준으로 공정을 구성합니다.", "소규모·Pilot 규모부터 맞춤 제작합니다."]),
         '<p class="amp-prose">제약공정 수처리 시스템을 제작·설치했습니다.</p>' +
-        f'<p class="amp-prose">{todo("제약공정 수처리 시스템 사진 수령 후 추가 (현재 이 분야 사진 없음)")}</p>')
+        gallery([("pharma-01", "제약공정 수처리 시스템"), ("pharma-02", "제약공정 수처리 시스템(다른 각도)")], "c2"))
 
 
 # ───────────────────────── 시공사례 ─────────────────────────
 def build_portfolio():
     def card(n, alt, cat, tag, title, text, meta, tagcls=""):
-        im = f'<div class="imgwrap">{img(n, alt)}</div>' if n else f'<div class="noimg">{ico("drop")}</div>'
+        im = f'<div class="imgwrap">{img(n, alt)}</div>'
         return (f'<div class="amp-card rv" data-cat="{cat}">{im}<div class="body"><span class="tag {tagcls}">{tag}</span>'
                 f'<h3>{title}</h3><p>{text}</p><div class="meta">{meta}</div></div></div>')
 
@@ -583,10 +626,10 @@ def build_portfolio():
         card("pilot-01", "이차전지 폐수처리 Pilot", "battery", "이차전지", "이차전지 폐수처리 Pilot", "고염 폐수 처리 공정을 시험하는 Pilot 설비 제작.", ""),
         card("module-a1", "공정수 재순환 시스템", "recycle", "공정수", "공정수 재순환 현장 맞춤형 시스템", "현장 조건에 맞춘 재순환 모듈 제작.", ""),
         card("module-b1", "전구체 입자선별 및 필터 장치", "battery", "이차전지", "전구체 입자선별 및 필터 장치", "전구체 입자 선별용 필터 장치 제작.", "고객: S社(양극재)"),
-        card(None, "", "pharma", "제약·화학", "제약공정 수처리 시스템", "제약공정 수처리 시스템 제작·설치. " + todo("사진 확인 필요"), ""),
+        card("pharma-01", "제약공정 수처리 시스템", "pharma", "제약·화학", "제약공정 수처리 시스템", "제약공정 수처리 시스템 제작·설치.", ""),
         card("monitor-screen", "수질 실시간 모니터링 프로그램 화면", "common", "공통", "수질 실시간 모니터링 프로그램·센서", "pH, EC, 온도, 탁도, TDS, DO 측정 및 데이터 관리.", ""),
         card("aqua-01", "육상양식 수조", "aqua", "육상양식", "양식어가 수질센서·물관리 시스템 검증", "양식 수조 수질 센서와 물관리 시스템을 검증.", "고객: C社(양식어가) · 2025"),
-        card(None, "", "battery", "이차전지", "원료 가공·소모품 납품", "이차전지 양극재 공정용 원료 가공 및 소모품 납품.", "고객: S社(양극재) · 2025"),
+        card("supply-01", "원료 가공·소모품 납품", "battery", "이차전지", "원료 가공·소모품 납품", "이차전지 양극재 공정용 원료 가공 및 소모품 납품.", "고객: S社(양극재) · 2025"),
     ]
     flt = '<div class="amp-filter">' + "".join(
         f'<button data-filter="{k}"{" class=on" if k == "all" else ""}>{v}</button>'.replace("class=on", 'class="on"') for k, v in
@@ -597,14 +640,13 @@ def build_portfolio():
     write("/default/portfolio/water.html", "시공사례·납품실적 | 에이엠피",
           "에이엠피의 수처리·공정장비 시공사례와 납품실적 – 공침반응기, 폐수처리 Pilot, 공정수 재순환, 수질 모니터링, 육상양식.", body, "portfolio")
 
-    air = [card("product-header-pipe", "Clad AL Header Pipe", "air", "공조부품", "Clad AL Header Pipe 가공", "알루미늄 클래드 파이프 가공품.", "", "air"),
-           card("product-pipe-assembly", "Clad AL Pipe 및 Assembly", "air", "공조부품", "Clad AL Pipe 및 Assembly", "파이프 및 조립품.", "", "air"),
-           card("product-heat-exchanger", "열교환기", "air", "공조부품", "열교환기용 부품", "자동차·가정용 에어컨 열교환기 적용.", "", "air")]
+    air = [card("air-case-01", "Clad AL Header Pipe 가공", "air", "공조부품", "Clad AL Header Pipe 가공", "알루미늄 클래드 파이프 가공품.", "", "air"),
+           card("air-case-02", "Clad AL Pipe 및 Assembly", "air", "공조부품", "Clad AL Pipe 및 Assembly", "파이프 및 조립품.", "", "air"),
+           card("air-case-03", "열교환기용 부품", "air", "공조부품", "열교환기용 부품", "자동차·가정용 에어컨 열교환기 적용.", "", "air")]
     body = (subhead("공조부품 실적", ["시공사례·납품실적", "공조부품 실적"], "Clad AL Header Pipe 등 공조부품 가공·납품 실적입니다.", kind="air") +
             localnav("portfolio", "/default/portfolio/air.html") +
             f'<section class="amp-sec"><div class="amp-wrap"><div class="amp-grid c3">{"".join(air)}</div>'
-            f'<p class="amp-prose" style="margin-top:14px">{todo("기존 갤러리 3건 이관 – 현 사이트 gallery01.php 원본 이미지·설명으로 교체")}</p>'
-            f'{cta("air", "공조부품", water=False)}</div></section>')
+                        f'{cta("air", "공조부품", water=False)}</div></section>')
     write("/default/portfolio/air.html", "공조부품 납품실적 | 에이엠피",
           "에이엠피의 Clad AL Header Pipe 등 공조부품 가공·납품실적.", body, "portfolio")
 
@@ -686,6 +728,42 @@ def build_seo_files():
         f"User-agent: *\nAllow: /\nDisallow: /default/cscenter/contact_ok.php\n\nSitemap: {SITE}/sitemap.xml\n", encoding="utf-8")
 
 
+def build_photo_list():
+    page_title = {}
+    for _, label, _, subs in NAV:
+        for t, h in subs:
+            page_title[h] = f"{label} > {t}"
+    page_title["/default/index.html"] = "메인"
+    lines = ["# 필요 사진 목록", "",
+             "사이트 초안에서 사진 자리가 비어 있는 곳입니다. 화면에는 점선 박스로 표시됩니다.",
+             "",
+             "**넣는 법**: 아래 `파일명` 그대로 `site_draft/default/img/` 에 JPG로 넣고 `python3 tools/build_draft.py` 를 다시 실행하면 해당 자리가 자동으로 사진으로 바뀝니다.",
+             "(자동 생성 문서입니다. 직접 고치지 말고 `tools/build_draft.py`의 `PHOTO_SPEC`을 수정하세요.)", "",
+             "## 1. 사진 자리 (이 페이지들에 나옵니다)", "",
+             "| No | 파일명 | 필요한 사진 | 규격·비고 | 구분 | 사용 위치 | 임시 자료 |", "|---|---|---|---|---|---|---|"]
+    n = 0
+    for key, (title, spec, ratio, optional) in PHOTO_SPEC.items():
+        if key not in PH_USED:
+            continue
+        n += 1
+        pages = ", ".join(page_title.get(p, p) for p in sorted(PH_USED[key], key=lambda x: list(page_title).index(x) if x in page_title else 99))
+        tmp = ROOT.parent / "자료" / "임시_저해상도" / f"{key}.jpg"
+        tmp_s = f"`자료/임시_저해상도/{key}.jpg` (저해상도, 참고용)" if tmp.exists() else "없음"
+        lines.append(f"| P{n:02d} | `{key}.jpg` | {title} | {spec or DEFAULT_SPEC} | {'선택' if optional else '필수'} | {pages} | {tmp_s} |")
+    lines += ["", "## 2. 사진 외 공통 자산", "",
+              "| 항목 | 용도 | 비고 |", "|---|---|---|",
+              "| 로고 원본(AI/SVG 또는 투명 PNG) | 헤더·푸터·파비콘 | 지금은 현 홈페이지 캡처를 잘라 쓴 임시본(`logo-t.png`) |",
+              "| ISO 9001 인증서 스캔 | 인증 및 제증명 | 현재 텍스트 카드만 있음 |",
+              "| 작업표준서 공개본(고객사명·품번·담당자 실명 가림) | 공조부품 생산·품질 | 지금은 원본 그대로 사용 중 |",
+              "| 인물이 나온 사진 사용 동의 | 공침반응기 제작·설치 사진 | `reactor-02`(용접), `reactor-site-01`(설치·점검) |",
+              "| 미생물 자동 배양수조 사진 | 육상양식 물관리 | 블루스타트업 과제 완료 후. 현재 페이지에는 자리 없음 |",
+              ""]
+    out = ROOT.parent / "자료" / "필요_사진_목록.md"
+    out.parent.mkdir(exist_ok=True)
+    out.write_text("\n".join(lines), encoding="utf-8")
+    print("photo placeholders:", n)
+
+
 def main():
     build_index()
     build_company()
@@ -694,6 +772,7 @@ def main():
     build_portfolio()
     build_cscenter()
     build_seo_files()
+    build_photo_list()
     print("pages:", len(PAGES))
 
 
