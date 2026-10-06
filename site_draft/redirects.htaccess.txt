@@ -1,0 +1,14 @@
+# 기존 URL → 신규 페이지 301 리다이렉트 (Apache .htaccess 용 초안)
+# 기존 파일 경로·이름은 현 서버에서 확인한 뒤 맞춰 적용한다. 카페24 호스팅이면 사이트 루트 .htaccess 에 추가.
+RewriteEngine On
+RewriteRule ^default/business/business01\.php$ /default/air/products.html [R=301,L]
+RewriteRule ^default/gallery/gallery01\.php$   /default/portfolio/water.html [R=301,L]
+RewriteRule ^default/stock/stock\.php$         /default/portfolio/water.html [R=301,L]
+# 기존 'CS CENTER' 링크 404 수정 (/default/customer/notice.php → 공지사항)
+RewriteRule ^default/customer/notice\.php$     /default/cscenter/notice.html [R=301,L]
+# 폐지: 커뮤니티(빈 게시판) → 공지사항
+# RewriteRule ^default/community/.*$ /default/cscenter/notice.html [R=301,L]   # 실제 경로 확인 후 활성화
+# 기존 cscenter/*.php → 신규 .html
+RewriteRule ^default/cscenter/contact\.php$ /default/cscenter/contact.html [R=301,L]
+RewriteRule ^default/cscenter/faq\.php$     /default/cscenter/faq.html [R=301,L]
+# company/*.php 는 기존 파일명 확인 후 인사말·연혁·조직도·인증·협력기관·오시는 길로 각각 연결

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /default/cscenter/contact_ok.php
+
+Sitemap: https://www.amp0404.co.kr/sitemap.xml
