@@ -1,6 +1,6 @@
 # site_draft – 에이엠피 홈페이지 리뉴얼 페이지 초안
 
-`01_사이트맵_콘텐츠기획안.md` 기준으로 만든 정적 HTML 초안 19페이지. 소스(FTP)를 받기 전에 만든 **독립 초안**이라 기존 사이트의 헤더·푸터·CSS를 쓰지 않고, 자체 CSS(`amp-draft.css`)로 동작한다.
+`01_사이트맵_콘텐츠기획안.md` 기준으로 만든 정적 HTML 초안 19페이지. **수처리 중심 디자인(v2)**: 메인 첫 화면·통계·적용 분야·프로세스·공정 흐름도·모니터링을 수처리 중심으로 구성하고, 공조부품은 "제조 기반" 소형 섹션과 별도 메뉴로 내렸다. 메뉴 순서도 회사소개 → 수처리 → 시공사례 → 공조부품 → 고객센터로 바꿨다(기획안 사이트맵의 2·3번 순서가 뒤바뀜). 소스(FTP)를 받기 전에 만든 **독립 초안**이라 기존 사이트의 헤더·푸터·CSS를 쓰지 않고, 자체 CSS(`amp-draft.css`)로 동작한다.
 
 ## 미리보기
 
@@ -35,7 +35,7 @@ site_draft/
    ├─ water/      overview battery recycle aquaculture pharma  (수처리·물 매니지먼트)
    ├─ portfolio/  water air                                (시공사례·납품실적)
    ├─ cscenter/   contact notice faq, contact_ok.php       (고객센터)
-   ├─ css/amp-draft.css, js/amp-draft.js
+   ├─ css/amp-draft.css, js/amp-draft.js   디자인 시스템(웹폰트 Pretendard는 CDN, 오프라인이면 시스템 폰트로 대체)
    └─ img/        PDF 자료에서 추출·크롭한 이미지 (JPEG 최대 1600px)
 ```
 
