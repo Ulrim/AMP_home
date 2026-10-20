@@ -17,8 +17,12 @@ MAP_URL = "https://map.naver.com/p/search/" + urllib.parse.quote("전남 광양�
 V = "20261006b"  # 캐시 무효화용 버전
 
 
+TODO_USED = {}  # 표식 문구 -> set(페이지)
+
+
 def todo(text):
     """AMP 확인이 필요한 자리. 배포 전 `class="todo"`로 검색해 모두 해소한다."""
+    TODO_USED.setdefault(text, set())
     return f'<span class="todo">[{text}]</span>'
 
 
@@ -35,7 +39,7 @@ PHOTO_SPEC = {
     "module-a2": ("공정수 재순환 모듈 설치 구성(다른 각도)", "", "4/3", False),
     "module-b1": ("전구체 입자선별 및 필터 장치", "", "4/3", False),
     "module-b2": ("입자선별 필터 장치(다른 각도)", "", "4/3", False),
-    "monitor-screen": ("실시간 모니터링 프로그램(AMP) 화면 캡처", "스크린샷 원본 PNG · 16:9 · 시험 데이터만 보이게", "16/9", False),
+    "monitor-screen": ("실시간 모니터링 프로그램(AMP) 화면 캡처", "스크린샷 · 16:9 · 시험 데이터만 보이게", "16/9", False),
     "pharma-01": ("제약공정 수처리 시스템 제작·설치 사진", "", "4/3", False),
     "pharma-02": ("제약공정 수처리 시스템(다른 각도)", "", "4/3", True),
     "supply-01": ("원료 가공·소모품 납품 사진", "", "4/3", True),
@@ -220,6 +224,9 @@ def write(path, title, desc, body, section="", extra_head=""):
     for k in PH_USED:
         if f'data-ph="{k}"' in html:
             PH_USED[k].add(path)
+    for t in TODO_USED:
+        if f'>[{t}]</span>' in html:
+            TODO_USED[t].add(path)
     out = ROOT / path.lstrip("/")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
@@ -728,40 +735,112 @@ def build_seo_files():
         f"User-agent: *\nAllow: /\nDisallow: /default/cscenter/contact_ok.php\n\nSitemap: {SITE}/sitemap.xml\n", encoding="utf-8")
 
 
+# 정보 공백/확인 항목 → (구분, 해소 방법)
+TODO_INFO = {
+    "대표번호": ("연락처", "AMP 대표 전화번호"),
+    "대표 이메일": ("연락처", "홈페이지에 표시할 대표 이메일"),
+    "공장 상세 주소": ("연락처", "광양 태인동 국가산단 공장의 정확한 주소(번지·호수)"),
+    "여수 지점 호수 106호 vs 202-01 확인": ("연락처", "여수 주삼동 지점의 정확한 호수 (106호 / 202-01 중 확인)"),
+    "현 홈페이지 company 연혁 원문 붙여넣기": ("회사 내용", "현 홈페이지 연혁 원문 (소스를 받으면 직접 추출 가능)"),
+    "실제 조직 구성 AMP 확인 후 수정": ("회사 내용", "실제 조직 구성(팀 이름·구성)"),
+    "기존 협력기관 4곳(현 홈페이지 파트너) 추가": ("회사 내용", "현 홈페이지 '파트너' 4곳 (소스를 받으면 직접 추출 가능)"),
+    "ISO 9001 인증서 이미지 수령 후 추가": ("회사 내용", "ISO 9001:2015 인증서 스캔"),
+    "공개 가능 범위 AMP 확인": ("공개 범위 확인", "2026년 스마트제조 전환지원·AI솔루션 구축지원 수행 사실을 연혁에 공개해도 되는지"),
+    "고객사명은 익명(S社) 표기 유지 – 공개 범위 AMP 확인": ("공개 범위 확인", "양극재사(S社) 실명 공개 여부 (기본은 익명 유지)"),
+    "고객은 C社(양식어가) 익명 – 양식장 위치 노출 가능 여부 확인": ("공개 범위 확인", "양식어가(C社) 실명·양식장 위치 노출 가능 여부"),
+    "작업표준서에 고객사명·품번·담당자 실명이 보임 – 게시 범위 AMP 최종 확인(필요 시 해당 부분 가림 처리)": ("공개 범위 확인", "작업표준서 3장에 보이는 고객사명·품번·담당자 실명의 게시 여부 (안 되면 가림 처리본 필요)"),
+    "과제 완료 후 사진 추가, 대외 표기 가능 여부 확인": ("공개 범위 확인", "블루스타트업 '미생물 자동 배양수조' 과제를 대외 표기해도 되는지, 완료 후 사진"),
+    "보유기간 AMP 확인": ("공개 범위 확인", "문의 개인정보 보유기간 (현재 임의로 '1년' 기재)"),
+    "기존 게시판(DB 연동) 페이지와 연결하거나, 공지가 생기면 이 화면에 목록 추가": ("서버·운영", "기존 공지사항 게시판(DB) 연결 여부 / 등록할 공지"),
+}
+CAT_ORDER = ["연락처", "회사 내용", "공개 범위 확인", "서버·운영"]
+
+
 def build_photo_list():
-    page_title = {}
+    import datetime
+    page_title = {"/default/index.html": "메인"}
     for _, label, _, subs in NAV:
         for t, h in subs:
             page_title[h] = f"{label} > {t}"
-    page_title["/default/index.html"] = "메인"
-    lines = ["# 필요 사진 목록", "",
-             "사이트 초안에서 사진 자리가 비어 있는 곳입니다. 화면에는 점선 박스로 표시됩니다.",
-             "",
-             "**넣는 법**: 아래 `파일명` 그대로 `site_draft/default/img/` 에 JPG로 넣고 `python3 tools/build_draft.py` 를 다시 실행하면 해당 자리가 자동으로 사진으로 바뀝니다.",
-             "(자동 생성 문서입니다. 직접 고치지 말고 `tools/build_draft.py`의 `PHOTO_SPEC`을 수정하세요.)", "",
-             "## 1. 사진 자리 (이 페이지들에 나옵니다)", "",
-             "| No | 파일명 | 필요한 사진 | 규격·비고 | 구분 | 사용 위치 | 임시 자료 |", "|---|---|---|---|---|---|---|"]
-    n = 0
-    for key, (title, spec, ratio, optional) in PHOTO_SPEC.items():
-        if key not in PH_USED:
+    order = list(page_title)
+
+    def pages_of(ps, all_pages=23):
+        ps = sorted(ps, key=lambda x: order.index(x) if x in order else 99)
+        return "전 페이지 푸터" if len(ps) >= 15 else ", ".join(page_title.get(p, p) for p in ps)
+
+    photos = [(k, PHOTO_SPEC.get(k, (k, "", "4/3", False)), PH_USED[k]) for k in PHOTO_SPEC if k in PH_USED]
+    req = [k for k, v, _ in photos if not v[3]]
+    todos = {c: [] for c in CAT_ORDER}
+    for t, ps in TODO_USED.items():
+        cat, how = TODO_INFO.get(t, ("회사 내용", t))
+        todos.setdefault(cat, []).append((t, how, ps))
+    n_todo = sum(len(v) for v in todos.values())
+
+    L = ["# 공백으로 남은 곳 · 필요한 자료 목록", "",
+         f"- 기준일: {datetime.date.today().isoformat()} (자동 생성 문서 – 직접 고치지 말고 `tools/build_draft.py` 수정 후 `python3 tools/build_draft.py` 재실행)",
+         "- 대상: `site_draft/` 초안 사이트 19페이지",
+         f"- 요약: **사진 자리 {len(photos)}곳**(필수 {len(req)}·선택 {len(photos) - len(req)}), **정보·확인 공백 {n_todo}종**, 공통 자산 6종",
+         "- 화면 표시: 사진 자리는 점선 박스(\"사진 필요\"), 정보 공백은 노란색 `[ ]` 표식으로 보입니다.", "",
+         "---", "", "## 1. AMP에 요청할 것 (체크리스트)", "",
+         "### A. 사진", "",
+         f"아래 파일명 그대로 `site_draft/default/img/`에 JPG로 넣고 재빌드하면 해당 자리가 자동으로 사진으로 바뀝니다. 필수 {len(req)}장, 선택 {len(photos) - len(req)}장.", "",
+         "| ☐ | No | 파일명 | 필요한 사진 | 규격·비고 | 구분 | 사용 위치 | 임시 자료 |", "|---|---|---|---|---|---|---|---|"]
+    for n, (k, (title, spec, ratio, opt), ps) in enumerate(photos, 1):
+        tmp = ROOT.parent / "자료" / "임시_저해상도" / f"{k}.jpg"
+        tmp_s = f"`자료/임시_저해상도/{k}.jpg` (저해상도·참고용)" if tmp.exists() else "없음"
+        L.append(f"| ☐ | P{n:02d} | `{k}.jpg` | {title} | {spec or DEFAULT_SPEC} | {'선택' if opt else '필수'} | {pages_of(ps)} | {tmp_s} |")
+    L += ["", "**우선순위(첫 화면에 보이는 순서)**: ① `monitor-screen`(메인 히어로 패널) ② `pilot-01`·`module-a1`·`pharma-01`(메인 적용 분야 카드) ③ `reactor-lab-01`·`pilot-02`(메인 실적 카드) ④ 공조부품 제품 6장 ⑤ 나머지", ""]
+    names = {"연락처": "B. 연락처·주소", "회사 내용": "C. 회사 내용", "공개 범위 확인": "D. 공개 범위·가부 확인 (AMP 결정 사항)", "서버·운영": "E. 서버·운영"}
+    for cat in CAT_ORDER:
+        if not todos.get(cat):
             continue
-        n += 1
-        pages = ", ".join(page_title.get(p, p) for p in sorted(PH_USED[key], key=lambda x: list(page_title).index(x) if x in page_title else 99))
-        tmp = ROOT.parent / "자료" / "임시_저해상도" / f"{key}.jpg"
-        tmp_s = f"`자료/임시_저해상도/{key}.jpg` (저해상도, 참고용)" if tmp.exists() else "없음"
-        lines.append(f"| P{n:02d} | `{key}.jpg` | {title} | {spec or DEFAULT_SPEC} | {'선택' if optional else '필수'} | {pages} | {tmp_s} |")
-    lines += ["", "## 2. 사진 외 공통 자산", "",
-              "| 항목 | 용도 | 비고 |", "|---|---|---|",
-              "| 로고 원본(AI/SVG 또는 투명 PNG) | 헤더·푸터·파비콘 | 지금은 현 홈페이지 캡처를 잘라 쓴 임시본(`logo-t.png`) |",
-              "| ISO 9001 인증서 스캔 | 인증 및 제증명 | 현재 텍스트 카드만 있음 |",
-              "| 작업표준서 공개본(고객사명·품번·담당자 실명 가림) | 공조부품 생산·품질 | 지금은 원본 그대로 사용 중 |",
-              "| 인물이 나온 사진 사용 동의 | 공침반응기 제작·설치 사진 | `reactor-02`(용접), `reactor-site-01`(설치·점검) |",
-              "| 미생물 자동 배양수조 사진 | 육상양식 물관리 | 블루스타트업 과제 완료 후. 현재 페이지에는 자리 없음 |",
-              ""]
-    out = ROOT.parent / "자료" / "필요_사진_목록.md"
+        L += [f"### {names[cat]}", "", "| ☐ | 필요한 것 | 화면 표식 | 나오는 위치 |", "|---|---|---|---|"]
+        for t, how, ps in todos[cat]:
+            L.append(f"| ☐ | {how} | `[{t if len(t) < 30 else t[:28] + '…'}]` | {pages_of(ps)} |")
+        L.append("")
+    L += ["### F. 사진 외 공통 자산", "",
+          "| ☐ | 항목 | 용도 | 비고 |", "|---|---|---|---|",
+          "| ☐ | 로고 원본(AI/SVG 또는 투명 PNG) | 헤더·푸터·파비콘 | 지금은 현 홈페이지 캡처를 잘라 쓴 임시본(`logo-t.png`, 해상도 낮음) |",
+          "| ☐ | 작업표준서 공개본(고객사명·품번·담당자 실명 가림) | 공조부품 > 생산·품질 | D의 작업표준서 건이 '게시 불가'일 때만 필요. 지금은 원본 그대로 사용 중 |",
+          "| ☐ | 인물이 나온 사진 사용 동의 | 이차전지 폐수처리 > 공침반응기 제작 과정 | 대상: `reactor-02`(용접), `reactor-site-01`(설치·점검). 동의 불가 시 해당 컷 제외 |",
+          "| ☐ | 인증서 번호 마스킹 여부 | 인증 및 제증명, 메인 신뢰 지표 | 벤처·뿌리기업 확인서에 사업자등록번호·법인번호·QR가 보임 |",
+          "| ☐ | 미생물 자동 배양수조 사진 | 육상양식 물관리 | 블루스타트업 과제 완료 후. 현재 페이지에는 자리 없음(문구만) |",
+          "| ☐ | 카페24 FTP 계정 또는 사이트 소스 일체, 관리자 계정 | 실서버 반영, 기존 연혁·파트너·갤러리 이관 | `CLAUDE.md` 미결 사항 1·2번 |",
+          "", "---", "", "## 2. 지금 화면에 임의로 채운 것 (승인·검증 필요)", "",
+          "공백은 아니지만 근거가 약해 AMP 승인이나 출처 확인이 필요한 항목입니다.", "",
+          "| 항목 | 위치 | 내용 | 확인할 것 |", "|---|---|---|---|",
+          "| 메인 슬로건·히어로 문구 | 메인 | \"현장에 맞춘 설비, 데이터로 관리하는 물\" 등 | AMP 최종 승인 (기획안에서 컬리버 초안) |",
+          "| 인사말 | 회사소개 > 인사말 | 수처리 중심으로 새로 작성 | AMP 최종 승인, \"가장 저렴한 가격\" 문구는 삭제함 |",
+          "| FAQ 답변 8건 | 고객센터 > FAQ | 기획안의 질문 8개에 컬리버가 답변 작성 | 답변 내용이 실제 응대 방식과 맞는지 |",
+          "| 연혁 \"2025.01 사업 개시\" | 회사소개 > 연혁 | 뿌리기업확인서의 사업개시일 기준 | 법인 사업개시일이 맞는지 |",
+          "| 협력기관 설명문 | 회사소개 > 협력기관 | 전남테크노파크 \"지역 기업 지원기관\" 등 | 표기 문구 |",
+          "| 연구전담부서·ISO 9001 | 메인 신뢰 지표 | 기획안 신뢰 지표 문구 그대로 | 인증서·설립 근거 자료 |",
+          "| 공정 도식 2종 | 이차전지 폐수처리 | 50L 공침 반응기 구성도, ZLD 공정 도식 | 출처(자체 제작/사업계획서 여부). ZLD 도식은 EDR 흐름과 달라 \"개념도\"로 표기함 |",
+          "| 수치 카드 | 메인 | 7단계·4개 분야·6종·3개 인증 | 기획안 수치(프로세스 7단계, 센서 6종)와 일치하는지만 확인 |",
+          "", "---", "", "## 3. 사이트에서 공백이 보이는 위치 (페이지별)", ""]
+    by_page = {}
+    for k, (title, spec, ratio, opt), ps in photos:
+        for p in ps:
+            by_page.setdefault(p, {"photo": [], "todo": []})["photo"].append(f"`{k}.jpg`{'(선택)' if opt else ''}")
+    for t, ps in TODO_USED.items():
+        if len(ps) >= 15:
+            continue
+        for p in ps:
+            by_page.setdefault(p, {"photo": [], "todo": []})["todo"].append(t if len(t) < 40 else t[:38] + "…")
+    L += ["| 페이지 | 사진 자리 | 정보 공백 |", "|---|---|---|"]
+    for p in sorted(by_page, key=lambda x: order.index(x) if x in order else 99):
+        L.append(f"| {page_title.get(p, p)} | {', '.join(by_page[p]['photo']) or '-'} | {'; '.join(by_page[p]['todo']) or '-'} |")
+    L += ["", "※ 모든 페이지 푸터와 일부 문의 영역에는 `[대표번호]`·`[대표 이메일]` 표식이 들어갑니다.", "",
+          "---", "", "## 4. 사진 규격 (AMP 전달용)", "",
+          "- 형식: JPG, 가로 1600px 이상, 가로 방향(4:3 또는 16:9). 스크린샷은 PNG로 받아도 되며 사이트에 넣을 때 JPG로 변환",
+          "- 휴대폰 원본 그대로 괜찮습니다(리사이즈·압축하지 말 것). 메신저로 보내면 화질이 줄어드니 메일·드라이브 권장",
+          "- 설비는 전체가 보이는 컷 1장 + 다른 각도 1장이 가장 좋습니다",
+          "- 사람 얼굴이 크게 나오는 컷은 피하거나 사용 동의를 함께 받을 것",
+          "- 고객사 로고·간판·서류가 찍힌 경우 알려 주세요(가림 처리가 필요할 수 있음)", ""]
+    out = ROOT.parent / "자료" / "공백_및_필요자료_목록.md"
     out.parent.mkdir(exist_ok=True)
-    out.write_text("\n".join(lines), encoding="utf-8")
-    print("photo placeholders:", n)
+    out.write_text("\n".join(L), encoding="utf-8")
+    print(f"photo placeholders: {len(photos)}, todo kinds: {n_todo}")
 
 
 def main():
