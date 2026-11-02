@@ -18,7 +18,7 @@ python3 -m http.server 8000 -d site_draft
 3. Deploy. 이후 브랜치에 푸시할 때마다 Preview URL이 자동으로 생긴다 (`claude/new-session-oj13pv` 브랜치 포함)
 
 주의:
-- `vercel.json`은 **미리보기 전용**이다. 전 페이지에 `noindex` 헤더를 붙이므로 실서버(amp0404.co.kr)에는 복사하지 않는다.
+- `vercel.json`은 Vercel용 설정(출력 폴더, `/` → `/default/index.html`)이다. Preview 배포는 Vercel이 자동으로 `noindex`를 붙이므로 별도 헤더는 두지 않는다. 커스텀 도메인(Production)을 연결하면 검색엔진에 노출되므로 **공백·확인 항목(`자료/공백_및_필요자료_목록.md`)을 해소한 뒤** 연결한다.
 - Vercel은 PHP를 실행하지 않으므로 **문의폼 전송은 미리보기에서 동작하지 않는다** (`contact_ok.php`). 화면·입력 검증까지만 확인 가능.
 - 실적 페이지에 고객사명이 보이는 작업표준서 이미지가 있다. Preview URL을 외부에 공유하기 전에 Vercel의 Deployment Protection(Vercel Authentication)이 켜져 있는지 확인한다.
 

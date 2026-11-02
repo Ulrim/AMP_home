@@ -5,14 +5,10 @@
   "buildCommand": null,
   "outputDirectory": "site_draft",
   "redirects": [
-    { "source": "/", "destination": "/default/index.html", "statusCode": 302 }
-  ],
-  "headers": [
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
-      ]
+      "source": "/",
+      "destination": "/default/index.html",
+      "statusCode": 302
     }
   ]
 }
