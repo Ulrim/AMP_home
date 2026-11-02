@@ -396,3 +396,34 @@ a.amp-card:hover img{transform:scale(1.05)}
   .amp-heritage .thumbs .amp-ph b,.amp-heritage .thumbs .amp-ph svg{display:none}
   .amp-heritage .thumbs .amp-ph span{font-size:11px}
 }
+
+/* ───── Customer · Solution · Problem (회사 소개자료 구조) ───── */
+.amp-csp{display:grid;grid-template-columns:1fr 1.08fr 1fr;gap:18px;align-items:stretch;margin:0 0 22px}
+.amp-csp>div{border-radius:22px;padding:28px 26px;background:var(--soft);border:1px solid var(--line);position:relative}
+.amp-csp h4{margin:0 0 4px;font-size:13px;letter-spacing:.14em;color:var(--blue);font-weight:800}
+.amp-csp h3{margin:0 0 14px;font-size:20px}
+.amp-csp ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.amp-csp li{font-size:15px;line-height:1.5;padding-left:16px;position:relative}
+.amp-csp li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--aqua)}
+.amp-csp .sol{background:linear-gradient(150deg,var(--navy2),var(--blue));color:#fff;border:0;box-shadow:0 18px 40px rgba(20,121,184,.28)}
+.amp-csp .sol h4{color:var(--aqua-l)}
+.amp-csp .sol li::before{background:#fff}
+.amp-csp.air .sol{background:linear-gradient(150deg,var(--brand-d),var(--brand));box-shadow:0 18px 40px rgba(229,88,42,.28)}
+.amp-csp.air h4{color:var(--brand)}
+.amp-csp.air .sol h4{color:#ffe3d6}
+.amp-csp.air li::before{background:var(--brand)}
+.amp-csp.air .sol li::before{background:#fff}
+.amp-goal{border-radius:18px;padding:22px 26px;background:#fff;border:2px solid var(--blue);font-weight:800;font-size:19px;line-height:1.5;color:var(--navy2);display:flex;gap:14px;align-items:center}
+.amp-goal::before{content:"▼";color:var(--blue);font-size:14px}
+.amp-goal.air{border-color:var(--brand);color:#7a2a0e}
+.amp-goal.air::before{color:var(--brand)}
+.amp-figure.wide img{background:#fff;object-fit:contain}
+.amp-news{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.amp-news a{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:16px 20px;border:1px solid var(--line);border-radius:14px;background:#fff;font-weight:700;transition:.15s}
+.amp-news a:hover{border-color:var(--blue);color:var(--blue)}
+.amp-news a small{font-weight:500;color:var(--ink-soft);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
+.amp-overview{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+.amp-overview .pics{display:grid;gap:14px}
+.amp-overview .pics img{border-radius:16px;width:100%;aspect-ratio:16/10;object-fit:cover}
+@media (max-width:900px){.amp-csp{grid-template-columns:1fr}.amp-overview{grid-template-columns:1fr}}
+@media (max-width:600px){.amp-news{grid-template-columns:1fr}.amp-news a small{display:none}.amp-goal{font-size:16px}}
