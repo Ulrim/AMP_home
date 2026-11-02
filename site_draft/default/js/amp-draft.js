@@ -98,12 +98,26 @@
       }
     }
     sel.form.addEventListener('submit', function (e) {
-      var agree = document.getElementById('agree');
+      var f = sel.form, agree = document.getElementById('agree');
       if (agree && !agree.checked) {
         e.preventDefault();
         alert('개인정보 수집·이용에 동의해 주세요.');
         agree.focus();
+        return;
       }
+      // 정적 호스팅(Vercel 등): 서버 없이 메일 앱으로 문의 작성
+      var to = f.getAttribute('data-mailto');
+      if (!to) return;
+      e.preventDefault();
+      var v = function (n) { var el = f.elements[n]; return el ? el.value.trim() : ''; };
+      var field = sel.options[sel.selectedIndex].text;
+      var subject = '[홈페이지 문의] ' + field + ' - ' + v('name');
+      var body = '문의 분야: ' + field + '\n성명: ' + v('name') + '\n회사명: ' + v('company') +
+        '\n연락처: ' + v('tel') + '\n이메일: ' + v('email') + '\n처리 유량·원수 종류: ' + v('water') +
+        '\n\n' + v('msg');
+      location.href = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      var m = document.getElementById('mailMsg');
+      if (m) { m.style.display = 'block'; m.scrollIntoView({ block: 'center' }); }
     });
   }
 

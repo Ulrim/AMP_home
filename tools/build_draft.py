@@ -28,9 +28,9 @@ TODO_USED = {}  # 표식 문구 -> set(페이지)
 
 
 def todo(text):
-    """AMP 확인이 필요한 자리. 배포 전 `class="todo"`로 검색해 모두 해소한다."""
+    """AMP 확인이 필요한 자리. 화면에는 보이지 않고(HTML 주석) 공백 목록 문서에만 집계된다."""
     TODO_USED.setdefault(text, set())
-    return f'<span class="todo">[{text}]</span>'
+    return f'<!--TODO:{text}-->'
 
 
 IMG_DIR = ROOT / "default" / "img"
@@ -66,9 +66,7 @@ PH_USED = {}  # key -> set(페이지)
 def placeholder(name, alt):
     title, spec, ratio, optional = PHOTO_SPEC.get(name, (alt, "", "4/3", False))
     PH_USED.setdefault(name, set())
-    opt = "(선택) " if optional else ""
-    return (f'<div class="amp-ph" data-ph="{name}" style="aspect-ratio:{ratio}" role="img" aria-label="사진 필요: {title}">'
-            f'<div>{ico("camera")}<b>{opt}사진 필요</b><span>{title}</span><small>{name}.jpg · {spec or DEFAULT_SPEC}</small></div></div>')
+    return f'<!--PHOTO:{name}-->'  # 화면에는 표시하지 않음 (사진을 넣고 재빌드하면 자동 표시)
 
 
 def img(name, alt, ext="jpg", cls=""):
@@ -230,10 +228,10 @@ def write(path, title, desc, body, section="", extra_head=""):
 </html>
 '''
     for k in PH_USED:
-        if f'data-ph="{k}"' in html:
+        if f'<!--PHOTO:{k}-->' in html:
             PH_USED[k].add(path)
     for t in TODO_USED:
-        if f'>[{t}]</span>' in html:
+        if f'<!--TODO:{t}-->' in html:
             TODO_USED[t].add(path)
     out = ROOT / path.lstrip("/")
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -299,7 +297,6 @@ def build_index():
   <div class="amp-bubbles"></div>
   <div class="amp-wrap">
     <div>
-      <!-- 슬로건 문구는 AMP 최종 승인 필요 -->
       <span class="eyebrow"><i></i>WATER MANAGEMENT SOLUTION</span>
       <h1>현장에 맞춘 설비,<br><em>데이터로 관리하는 물</em></h1>
       <p class="sub">수처리 설비의 설계·제작·설치·시운전부터 수질 모니터링까지. 이차전지 공정 설비와 공조부품 제조 기술이 뒷받침합니다.</p>
@@ -422,7 +419,6 @@ def build_company():
     company_page("/default/company/greeting.html", "인사말 | 에이엠피",
         "공조부품 제조로 쌓은 가공·품질관리 역량을 바탕으로 수처리·물 매니지먼트로 사업을 넓힌 에이엠피의 인사말.",
         "인사말", f'''
-<!-- 인사말은 컬리버 초안. AMP 최종 승인 필요 -->
 <div class="amp-prose" style="max-width:820px">
   <h2>홈페이지를 방문해 주신 여러분께 감사드립니다.</h2>
   <p>에이엠피는 <b>수처리·물 매니지먼트</b> 분야에서 현장·수질 진단부터 공정 설계, 설비 제작·설치, 시운전, 모니터링까지 한 흐름으로 수행합니다.
@@ -622,7 +618,7 @@ def build_air():
 {cta("air", "공조부품(Clad AL Header Pipe)", water=False)}''')
 
     qs = "".join(f'<figure class="amp-figure">{img(n, a)}<figcaption>{a}</figcaption></figure>' for n, a in [
-        ("qs-cutting", "작업표준서 – 절단 공정"), ("qs-deburring", "작업표준서 – 디버링 공정"), ("qs-washing", "작업표준서 – 세척 공정")])
+        ("qs-cutting-proc", "작업표준서 – 절단 공정 작업 순서"), ("qs-deburring-proc", "작업표준서 – 디버링 공정 작업 순서"), ("qs-washing-proc", "작업표준서 – 세척 공정 작업 순서")])
     flow = "".join(f"<li>{s}</li>" for s in ["원소재 조관", "사이징/인발", "절단", "디버링", "표면처리(세척)", "검사", "포장·출고"])
     air_page("/default/air/quality.html", "생산·품질", "공조부품 생산공정·품질관리 | 에이엠피",
         "Clad AL Header Pipe 생산공정(조관·사이징·절단·디버링·세척·검사)과 공정별 작업표준서, ISO 9001:2015 품질관리를 소개합니다.",
@@ -646,7 +642,6 @@ def build_air():
 {gallery([("prep-01", "작업대 제작"), ("prep-02", "세척 설비 설치"), ("prep-03", "절단 라인 구성"), ("prep-04", "가공품 적재")], "c2")}
 <h3>설비 제작 과정</h3>
 {gallery([("build-01", "가공 설비 제작"), ("build-02", "설비 조립"), ("build-03", "설비 시운전"), ("build-04", "완성 설비")], "c2")}
-<p class="amp-prose" style="margin-top:12px">{todo("작업표준서에 고객사명·품번·담당자 실명이 보임 – 게시 범위 AMP 최종 확인(필요 시 해당 부분 가림 처리)")}</p>
 {cta("air", "공조부품", water=False)}''')
 
 
@@ -810,7 +805,8 @@ def build_water():
 # ───────────────────────── 시공사례 ─────────────────────────
 def build_portfolio():
     def card(n, alt, cat, tag, title, text, meta, tagcls=""):
-        im = f'<div class="imgwrap">{img(n, alt)}</div>'
+        tag_img = img(n, alt)
+        im = "" if tag_img.startswith("<!--PHOTO") else f'<div class="imgwrap">{tag_img}</div>'
         return (f'<div class="amp-card rv" data-cat="{cat}">{im}<div class="body"><span class="tag {tagcls}">{tag}</span>'
                 f'<h3>{title}</h3><p>{text}</p><div class="meta">{meta}</div></div></div>')
 
@@ -876,7 +872,8 @@ def build_cscenter():
 <div class="amp-split top">
 <div>
 <p id="sentMsg" class="amp-box hl" style="display:none"><b>문의가 접수되었습니다.</b> 확인 후 연락드리겠습니다.</p>
-<form class="amp-form" method="post" action="/default/cscenter/contact_ok.php">
+<p id="mailMsg" class="amp-box hl" style="display:none"><b>메일 앱에서 작성된 문의를 보내 주세요.</b> 메일 앱이 열리지 않으면 <a href="mailto:{EMAIL}" style="text-decoration:underline">{EMAIL}</a> 또는 {PHONE}로 연락해 주세요.</p>
+<form class="amp-form" method="post" action="/default/cscenter/contact_ok.php" data-mailto="{EMAIL}">
   <div class="amp-hp" aria-hidden="true"><label>비워 두세요 <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
   <div><label for="field">문의 분야 <span class="req">*</span></label><select id="field" name="field" required>{options}</select></div>
   <div class="two">
@@ -896,7 +893,7 @@ def build_cscenter():
     <tr><th>보유 기간</th><td>문의 처리 완료 후 1년 보관 후 파기 {todo("보유기간 AMP 확인")}</td></tr></table>
     <p style="margin:8px 0 0">동의를 거부할 수 있으며, 거부 시 상담 접수가 제한됩니다.</p></div>
   <label class="amp-check"><input type="checkbox" id="agree" name="agree" value="1" required> 개인정보 수집·이용에 동의합니다. <span class="req">(필수)</span></label>
-  <div><button class="amp-btn" type="submit">문의 접수</button></div>
+  <div><button class="amp-btn" type="submit">문의 메일 작성</button><div class="hint" style="margin-top:8px">버튼을 누르면 입력한 내용이 담긴 메일이 열립니다.</div></div>
 </form></div>
 <aside class="amp-box"><h3>직접 문의</h3>
 <table class="amp-table"><tr><th>전화</th><td>{PHONE}</td></tr><tr><th>이메일</th><td><a href="mailto:{EMAIL}">{EMAIL}</a></td></tr>

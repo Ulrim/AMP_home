@@ -8,7 +8,7 @@
     {
       "source": "/",
       "destination": "/default/index.html",
-      "statusCode": 302
+      "statusCode": 301
     }
   ]
 }
