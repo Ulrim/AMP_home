@@ -13,7 +13,12 @@ import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "site_draft"
 SITE = "https://www.amp0404.co.kr"
-PHONE = "0507-1486-0997"  # 공장등록증명(신청)서 기재 번호 – 대표번호로 공개 가능한지 AMP 확인 필요
+PHONE = "0507-1486-0997"  # AMP 확인 (2026.11.02)
+EMAIL = "mw0916@naver.com"
+ADDR_HQ = "전남광주통합특별시 광양시 익신산단3길 40, 409호"
+ADDR_FACTORY = "전남광주통합특별시 광양시 태인5길 51-17, 1층/가동"
+ADDR_BRANCH = "전남광주통합특별시 여수시 삼동3길 17, 202-01호"
+MAP_URL_BRANCH = "https://map.naver.com/p/search/" + urllib.parse.quote("여수시 삼동3길 17")
 MAP_URL = "https://map.naver.com/p/search/" + urllib.parse.quote("전남 광양시 광양읍 익신산단3길 40")
 MAP_URL_FACTORY = "https://map.naver.com/p/search/" + urllib.parse.quote("전남 광양시 태인5길 51-17")
 V = "20261006b"  # 캐시 무효화용 버전
@@ -164,8 +169,8 @@ def footer():
         '<footer class="amp-footer"><div class="amp-wrap">'
         '<address><img class="fl" src="/default/img/logo-t.png" alt="AMP 에이엠피"><br>'
         '<b>유한회사 에이엠피</b> · 대표이사 안명원<br>사업자등록번호 171-81-03763<br>'
-        '본점 전남 광양시 광양읍 익신산단3길 40, 409호<br>'
-        f'TEL {PHONE} · E-mail {todo("대표 이메일")}</address>'
+        f'본사 {ADDR_HQ}<br>공장·연구전담부서 {ADDR_FACTORY}<br>지점 {ADDR_BRANCH}<br>'
+        f'TEL {PHONE} · E-mail <a href="mailto:{EMAIL}">{EMAIL}</a></address>'
         '<ul><li><a href="/default/company/greeting.html">회사소개</a></li>'
         '<li><a href="/default/water/overview.html">수처리·물 매니지먼트</a></li>'
         '<li><a href="/default/portfolio/water.html">시공사례</a></li>'
@@ -284,8 +289,8 @@ def build_index():
         "@context": "https://schema.org", "@type": "Organization",
         "name": "유한회사 에이엠피", "alternateName": "AMP", "url": SITE,
         "logo": SITE + "/default/img/logo.png",
-        "address": {"@type": "PostalAddress", "addressRegion": "전남", "addressLocality": "광양시",
-                    "streetAddress": "광양읍 익신산단3길 40, 409호", "addressCountry": "KR"},
+        "address": {"@type": "PostalAddress", "addressRegion": "전남광주통합특별시", "addressLocality": "광양시",
+                    "streetAddress": "익신산단3길 40, 409호", "addressCountry": "KR"},
     }, ensure_ascii=False)
     chips = "".join(f"<span>{s}</span>" for s in SENSORS)
     body = f'''
@@ -435,8 +440,10 @@ def build_company():
 <tr><th>대표</th><td>안명원 · 화학공학 석사, 제조업 부설연구소 및 품질 업무 10년 이상</td></tr>
 <tr><th>설립일</th><td>2025년 1월 1일 (법인 전환, 2023년 4월 창업)</td></tr>
 <tr><th>사업자</th><td>법인사업자 (171-81-03763)</td></tr>
-<tr><th>본사</th><td>전라남도 광양시 광양읍 익신산단3길 40, 409호</td></tr>
-<tr><th>지점·공장</th><td>전라남도 광양시 태인5길 51-17, 가동 1층</td></tr>
+<tr><th>본사</th><td>{ADDR_HQ}</td></tr>
+<tr><th>공장·연구전담부서</th><td>{ADDR_FACTORY}</td></tr>
+<tr><th>지점</th><td>{ADDR_BRANCH}</td></tr>
+<tr><th>연락처</th><td>{PHONE} · {EMAIL}</td></tr>
 <tr><th>업종·업태</th><td>제조업 / 비철금속, 알루미늄, 파이프<br>제조업 / 산업용 특수목적 기계, 액체여과장치 제조업<br>제조업 / 이차전지 관련 자재부품 및 도소매</td></tr>
 </table>
 <div class="pics">{img("factory-exterior", "광양 태인동 지점·공장 외관")}{img("factory-interior", "공장 내부 생산 공간")}</div>
@@ -453,7 +460,7 @@ def build_company():
         ("2026.03", "벤처기업 확인 (제20260317030006호, 혁신성장유형)"),
         ("2026.02", "국립순천대학교 AI중심대학사업단과 상호협력 협약 (02.09)"),
         ("2026", "스마트제조 전환지원 사업, AI솔루션 구축지원 사업 등 수행 " + todo("공개 가능 범위 AMP 확인")),
-        ("2025.12", "지점 등록 (융합지구 – 여수 주삼동)"),
+        ("2025.12", "지점 등록 (융합지구 – 여수)"),
         ("2025.11", "전라남도지사 표창 수여"),
         ("2025.10", "연구개발전담부서 설립 (제2025155989호), 뿌리기업 확인 (제25122-28120호)"),
         ("2025.09", "광양시 이차전지 산업 상호협력과 공동발전을 위한 업무협약 참여 (09.24)"),
@@ -521,14 +528,16 @@ def build_company():
         "에이엠피의 협력기관 – 광양시 이차전지 산업 협약, 전남테크노파크, 순천대·전남대·한영대 산학협력, 이차전지 폐수처리 해외 협력.", "협력기관", partners_html)
 
     company_page("/default/company/location.html", "오시는 길 | 에이엠피",
-        "에이엠피 본사(광양 익신산단), 지점·공장(광양 태인동 국가산단), 지점(여수 주삼동) 위치 안내.", "오시는 길",
+        "에이엠피 본사(광양 익신산단), 공장·연구전담부서(광양 태인동 국가산단), 지점(여수) 위치 안내.", "오시는 길",
         f'''<table class="amp-table">
-<tr><th>본사</th><td>전남 광양시 광양읍 익신산단3길 40, 409호 (광양만권 소재부품 지식산업센터)<br>
+<tr><th>본사</th><td>{ADDR_HQ} (광양만권 소재부품 지식산업센터)<br>
 <a href="{MAP_URL}" target="_blank" rel="noopener" style="text-decoration:underline">지도 보기</a></td></tr>
-<tr><th>지점·공장</th><td>전남 광양시 태인5길 51-17, 가동 1층 (태인동, 광양국가산업단지) · 연구개발전담부서<br>
+<tr><th>공장·연구전담부서</th><td>{ADDR_FACTORY} (태인동, 광양국가산업단지)<br>
 <a href="{MAP_URL_FACTORY}" target="_blank" rel="noopener" style="text-decoration:underline">지도 보기</a></td></tr>
 <tr><th>사진</th><td><div class="amp-gallery c2" style="max-width:620px">{"".join(f'<figure>{img(n, a)}</figure>' for n, a in [("factory-exterior", "지점·공장 외관"), ("factory-interior", "공장 내부")])}</div></td></tr>
-<tr><th>지점</th><td>전남 여수시 주삼동 (여수 융합지구) {todo("여수 지점 호수 106호 vs 202-01 확인")}</td></tr>
+<tr><th>지점</th><td>{ADDR_BRANCH} (여수 융합지구)<br>
+<a href="{MAP_URL_BRANCH}" target="_blank" rel="noopener" style="text-decoration:underline">지도 보기</a></td></tr>
+<tr><th>이메일</th><td><a href="mailto:{EMAIL}">{EMAIL}</a></td></tr>
 <tr><th>전화</th><td>{PHONE}</td></tr></table>''')
 
 
@@ -890,8 +899,8 @@ def build_cscenter():
   <div><button class="amp-btn" type="submit">문의 접수</button></div>
 </form></div>
 <aside class="amp-box"><h3>직접 문의</h3>
-<table class="amp-table"><tr><th>전화</th><td>{PHONE}</td></tr><tr><th>이메일</th><td>{todo("대표 이메일")}</td></tr>
-<tr><th>본점</th><td>전남 광양시 광양읍 익신산단3길 40, 409호</td></tr></table>
+<table class="amp-table"><tr><th>전화</th><td>{PHONE}</td></tr><tr><th>이메일</th><td><a href="mailto:{EMAIL}">{EMAIL}</a></td></tr>
+<tr><th>본사</th><td>{ADDR_HQ}</td></tr></table>
 <p style="font-size:14px;color:var(--ink-soft);margin-top:14px">견적 진행: 문의 → 현장·수질 확인 → 개략 견적 → 상세 설계 견적</p></aside>
 </div>''')
 
@@ -959,7 +968,7 @@ def build_photo_list():
 
     L = ["# 공백으로 남은 곳 · 필요한 자료 목록", "",
          f"- 기준일: {datetime.date.today().isoformat()} (자동 생성 문서 – 직접 고치지 말고 `tools/build_draft.py` 수정 후 `python3 tools/build_draft.py` 재실행)",
-         "- 대상: `site_draft/` 초안 사이트 19페이지",
+         f"- 대상: `site_draft/` 초안 사이트 {len(set(PAGES))}페이지",
          f"- 요약: **사진 자리 {len(photos)}곳**(필수 {len(req)}·선택 {len(photos) - len(req)}), **정보·확인 공백 {n_todo}종**, 공통 자산 7종",
          "- 화면 표시: 사진 자리는 점선 박스(\"사진 필요\"), 정보 공백은 노란색 `[ ]` 표식으로 보입니다.", "",
          "---", "", "## 1. AMP에 요청할 것 (체크리스트)", "",
@@ -970,7 +979,7 @@ def build_photo_list():
         tmp = ROOT.parent / "자료" / "임시_저해상도" / f"{k}.jpg"
         tmp_s = f"`자료/임시_저해상도/{k}.jpg` (저해상도·참고용)" if tmp.exists() else "없음"
         L.append(f"| ☐ | P{n:02d} | `{k}.jpg` | {title} | {spec or DEFAULT_SPEC} | {'선택' if opt else '필수'} | {pages_of(ps)} | {tmp_s} |")
-    L += ["", "**우선순위(첫 화면에 보이는 순서)**: ① `monitor-screen`(메인 히어로 패널) ② `pilot-01`·`module-a1`·`pharma-01`(메인 적용 분야 카드) ③ `reactor-lab-01`·`pilot-02`(메인 실적 카드) ④ 공조부품 제품 6장 ⑤ 나머지", ""]
+    L += [""]
     names = {"연락처": "B. 연락처·주소", "회사 내용": "C. 회사 내용", "공개 범위 확인": "D. 공개 범위·가부 확인 (AMP 결정 사항)", "서버·운영": "E. 서버·운영"}
     for cat in CAT_ORDER:
         if not todos.get(cat):
@@ -996,11 +1005,9 @@ def build_photo_list():
           "| 메인 슬로건·히어로 문구 | 메인 | \"현장에 맞춘 설비, 데이터로 관리하는 물\" 등 | AMP 최종 승인 (기획안에서 컬리버 초안) |",
           "| 인사말 | 회사소개 > 인사말 | 수처리 중심으로 새로 작성 | AMP 최종 승인, \"가장 저렴한 가격\" 문구는 삭제함 |",
           "| FAQ 답변 8건 | 고객센터 > FAQ | 기획안의 질문 8개에 컬리버가 답변 작성 | 답변 내용이 실제 응대 방식과 맞는지 |",
-          "| 대표번호 0507-1486-0997 | 전 페이지 푸터, 오시는 길, 견적·기술상담 | 공장등록증명(신청)서에 신청인 전화번호로 적힌 번호를 사용 | 홈페이지에 공개할 대표번호가 맞는지 |",
-          "| 연혁 구성 | 회사소개 > 연혁 | 회사 소개자료 연혁 16건 + 인증서·협약서 날짜를 합침 | 청년창업사관학교: 소개자료는 \"2024.04 수행 완료\", 졸업장 날짜는 2025.02.13 – 어느 쪽으로 표기할지 |",
+                    "| 연혁 구성 | 회사소개 > 연혁 | 회사 소개자료 연혁 16건 + 인증서·협약서 날짜를 합침 | 청년창업사관학교: 소개자료는 \"2024.04 수행 완료\", 졸업장 날짜는 2025.02.13 – 어느 쪽으로 표기할지 |",
           "| 연혁·협력기관의 협약 체결일 | 연혁, 협력기관 | 협약서·인증서에 적힌 날짜 그대로 | 날짜 오기 없는지, 협약 사실을 대외 공개해도 되는지 |",
-          "| 연구개발부서 위치 | 오시는 길 | 인정서·소개자료 기준으로 태인동 지점·공장에 표기 | 기획안의 \"연구: 여수 지점\"과 다름 |",
-          "| 대표 약력 | 인사말 > 회사 개요 | 소개자료의 \"화공 석사, 제조업 부설연구소 및 품질 업무 10년 이상\"을 반영. 출생연도는 개인정보라 뺌 | 공개 문구 |",
+                    "| 대표 약력 | 인사말 > 회사 개요 | 소개자료의 \"화공 석사, 제조업 부설연구소 및 품질 업무 10년 이상\"을 반영. 출생연도는 개인정보라 뺌 | 공개 문구 |",
           "| ISO 9001 인증범위 | 인증 및 제증명, 메인 신뢰 지표 | 인증서 범위가 \"알루미늄 합금 파이프 가공에 대한 제조\"라 수처리 설비에는 해당하지 않음 | 수처리 품질로 오해되지 않는 표기 문구 |",
           "| 50L 공침 반응기 구성도 | 이차전지 폐수처리 | 1차 자료의 도식(출처 불명). ZLD 도식은 회사 소개자료의 EDR 공정도로 교체해 삭제함 | 50L 반응기 도식 출처 |",
           "| 육상양식 개요도 2종 | 육상양식 물관리 | 회사 소개자료의 기술 개요도·패키지 모델 개요도(일러스트) | 실제 설비가 아닌 개념도로 읽히는지 (캡션에 \"개요도\"로 표기) |",
@@ -1027,7 +1034,7 @@ def build_photo_list():
     L += ["| 페이지 | 사진 자리 | 정보 공백 |", "|---|---|---|"]
     for p in sorted(by_page, key=lambda x: order.index(x) if x in order else 99):
         L.append(f"| {page_title.get(p, p)} | {', '.join(by_page[p]['photo']) or '-'} | {'; '.join(by_page[p]['todo']) or '-'} |")
-    L += ["", "※ 모든 페이지 푸터와 견적·기술상담 영역에는 `[대표 이메일]` 표식이 들어갑니다.", "",
+    L += ["",
           "---", "", "## 4. 사진 규격 (AMP 전달용)", "",
           "- 형식: JPG, 가로 1600px 이상, 가로 방향(4:3 또는 16:9). 스크린샷은 PNG로 받아도 되며 사이트에 넣을 때 JPG로 변환",
           "- 휴대폰 원본 그대로 괜찮습니다(리사이즈·압축하지 말 것). 메신저로 보내면 화질이 줄어드니 메일·드라이브 권장",

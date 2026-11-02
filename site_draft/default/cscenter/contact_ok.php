@@ -1,7 +1,7 @@
 <?php
 // 견적·기술상담 폼 수신 → 관리자 메일 발송 후 contact.html?sent=1 로 이동 (UTF-8 파일)
-// 배포 전: $TO 를 AMP 문의 수신 메일로 바꾼다. 서버 메일 발송(mail) 설정을 확인한다.
-$TO   = 'CHANGE_ME@example.com';   // [확인 필요] 문의 수신 주소
+// 배포 전: 서버 메일 발송(mb_send_mail) 설정을 확인한다.
+$TO   = 'mw0916@naver.com';   // 대표 이메일(AMP 확인 2026.11.02). 문의 수신 주소를 따로 쓰면 변경
 $FROM = 'no-reply@amp0404.co.kr';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: /default/cscenter/contact.html'); exit; }
