@@ -196,6 +196,18 @@ a.amp-card:hover img{transform:scale(1.05)}
 .amp-figure figcaption{font-size:13px;color:var(--ink-soft);margin-top:10px;text-align:center}
 .amp-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .amp-gallery.c2{grid-template-columns:repeat(2,1fr)}
+.amp-gallery.c4{grid-template-columns:repeat(4,1fr)}
+.amp-gallery.contain img{object-fit:contain;background:#fff;border:1px solid var(--line)}
+.amp-news{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.amp-news li{border-bottom:1px solid var(--line)}
+.amp-news a{display:grid;grid-template-columns:110px 1fr auto;gap:18px;align-items:center;padding:20px 6px;transition:background .2s}
+.amp-news a:hover{background:var(--soft)}
+.amp-news time{color:var(--ink-soft);font-size:14px;font-variant-numeric:tabular-nums}
+.amp-news b{display:block;font-size:17px;line-height:1.45}
+.amp-news small{display:block;color:var(--ink-soft);font-size:13px;margin-top:4px}
+.amp-news .src{font-size:13px;color:var(--blue);white-space:nowrap}
+.amp-evt{margin-top:56px}.amp-evt:first-child{margin-top:0}
+.amp-evt h2{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.amp-evt h2 small{font-size:15px;font-weight:600;color:var(--ink-soft)}
 .amp-gallery figure{margin:0;overflow:hidden}
 .amp-gallery img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:14px;transition:transform .5s}
 .amp-gallery figure:hover img{transform:scale(1.04)}
@@ -326,6 +338,7 @@ a.amp-card:hover img{transform:scale(1.05)}
 @media (max-width:1040px){
   .amp-grid.c4{grid-template-columns:repeat(2,1fr)}
   .amp-grid.c3{grid-template-columns:repeat(2,1fr)}
+  .amp-gallery.c4{grid-template-columns:repeat(3,1fr)}
   .amp-hero2 .amp-wrap{grid-template-columns:1fr}
   .amp-panel{max-width:460px}
   .amp-steps7{grid-template-columns:repeat(4,1fr);row-gap:30px}
@@ -356,7 +369,10 @@ a.amp-card:hover img{transform:scale(1.05)}
   .amp-hero2{padding:116px 0 150px}
   .amp-subhead{padding:112px 0 64px}
   .amp-grid.c2,.amp-grid.c3,.amp-grid.c4,.amp-gallery{grid-template-columns:1fr}
-  .amp-gallery.c2{grid-template-columns:1fr 1fr}
+  .amp-gallery.c2,.amp-gallery.c4{grid-template-columns:1fr 1fr}
+  .amp-grid.certs{grid-template-columns:1fr 1fr;gap:14px}
+  .amp-cert figcaption{font-size:14px}
+  .amp-news a{grid-template-columns:1fr;gap:4px}
   .amp-field{min-height:340px}
   .amp-steps7{grid-template-columns:repeat(2,1fr)}
   .amp-form .two{grid-template-columns:1fr}

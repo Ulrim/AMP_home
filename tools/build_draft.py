@@ -14,7 +14,7 @@ import urllib.parse
 ROOT = pathlib.Path(__file__).resolve().parent.parent / "site_draft"
 SITE = "https://www.amp0404.co.kr"
 MAP_URL = "https://map.naver.com/p/search/" + urllib.parse.quote("전남 광양시 광양읍 익신산단3길 40")
-V = "20261006b"  # 캐시 무효화용 버전
+V = "20261103a"  # 캐시 무효화용 버전
 
 
 TODO_USED = {}  # 표식 문구 -> set(페이지)
@@ -66,6 +66,8 @@ def placeholder(name, alt):
 
 def img(name, alt, ext="jpg", cls=""):
     if ext == "jpg" and not (IMG_DIR / f"{name}.jpg").exists():
+        if PHOTO_SPEC.get(name, ("", "", "", False))[3]:
+            return ""  # 선택 사진은 없으면 자리 자체를 숨긴다
         return placeholder(name, alt)
     c = f' class="{cls}"' if cls else ""
     return f'<img src="/default/img/{name}.{ext}" alt="{alt}" loading="lazy"{c}>'
@@ -130,6 +132,10 @@ NAV = [
         ("제품 소개", "/default/air/products.html"),
         ("생산·품질", "/default/air/quality.html"),
     ]),
+    ("pr", "홍보센터", "/default/pr/news.html", [
+        ("언론보도", "/default/pr/news.html"),
+        ("활동 사진", "/default/pr/gallery.html"),
+    ]),
     ("cscenter", "고객센터", "/default/cscenter/contact.html", [
         ("견적·기술상담", "/default/cscenter/contact.html"),
         ("공지사항", "/default/cscenter/notice.html"),
@@ -167,6 +173,7 @@ def footer():
         '<li><a href="/default/water/overview.html">수처리·물 매니지먼트</a></li>'
         '<li><a href="/default/portfolio/water.html">시공사례</a></li>'
         '<li><a href="/default/air/products.html">공조부품</a></li>'
+        '<li><a href="/default/pr/news.html">홍보센터</a></li>'
         '<li><a href="/default/cscenter/contact.html">CS CENTER</a></li></ul>'
         '<div class="amp-copy">© AMP Co., Ltd. All rights reserved.</div>'
         '</div></footer>'
@@ -366,7 +373,14 @@ def build_index():
 <section class="amp-sec soft"><div class="amp-wrap">
   <span class="amp-eyebrow">TRUST</span><h2 class="rv">신뢰 지표</h2>
   <ul class="amp-trust"><li>ISO 9001</li><li>벤처기업 확인</li><li>뿌리기업 확인</li><li>연구전담부서</li><li>전라남도지사 표창</li></ul>
-  <div class="amp-certrow">{img("cert-venture", "벤처기업확인서")}{img("cert-root", "뿌리기업확인서")}{img("award-jeonnam", "전라남도지사 표창장")}{img("award-smba", "중소벤처기업청장 상장")}</div>
+  <div class="amp-certrow">{img("cert-iso", "ISO 9001 품질경영시스템 인증서")}{img("cert-venture", "벤처기업확인서")}{img("cert-root", "뿌리기업확인서")}{img("cert-rnd", "연구개발전담부서 인정서")}</div>
+  <p style="margin-top:22px"><a class="amp-btn line" href="/default/company/certification.html">인증 및 제증명 전체 보기</a></p>
+</div></section>
+
+<section class="amp-sec"><div class="amp-wrap">
+  <div class="amp-head-row"><div><span class="amp-eyebrow">NEWS</span><h2 class="rv">언론보도</h2></div>
+  <a class="amp-btn line" href="/default/pr/news.html">언론보도 전체 보기</a></div>
+  <div style="margin-top:28px">{news_list([n for n in NEWS if n[2]][:4])}</div>
 </div></section>
 {banner()}
 '''
@@ -403,23 +417,50 @@ def build_company():
   필요하신 설비와 제품은 전화 또는 <a href="/default/cscenter/contact.html" style="text-decoration:underline">견적·기술상담</a>으로 문의해 주십시오.</p>
   <p style="margin-top:28px"><b>대표이사 안명원</b></p>
 </div>
+<h3 style="margin-top:56px">회사 개요</h3>
+<div class="amp-split top">
+<table class="amp-table">
+<tr><th>회사명</th><td>유한회사 에이엠피 (AMP)</td></tr>
+<tr><th>대표이사</th><td>안명원 <small style="color:var(--ink-soft)">· 화학공학 석사, 제조업 부설연구소·품질 업무 10년 이상</small></td></tr>
+<tr><th>설립</th><td>2023년 4월 에이엠피 설립 · 2025년 1월 1일 법인 전환</td></tr>
+<tr><th>사업자등록번호</th><td>171-81-03763 (법인사업자)</td></tr>
+<tr><th>업종</th><td>제조업 – 비철금속·알루미늄 파이프<br>제조업 – 산업용 특수목적 기계, 액체여과장치<br>제조업 – 이차전지 관련 자재·부품 및 도소매</td></tr>
+<tr><th>본사</th><td>전남 광양시 광양읍 익신산단3길 40, 409호</td></tr>
+<tr><th>지점·공장</th><td>전남 광양시 태인5길 51-17, 가동 1층 (광양국가산업단지)</td></tr>
+</table>
+<div class="amp-gallery c2">{"".join(f'<figure class="rv">{img(n, a)}<figcaption>{a}</figcaption></figure>' for n, a in [("factory-outside", "광양 태인동 공장 외관"), ("factory-inside", "공장 내부")])}</div>
+</div>
 <h3 style="margin-top:56px">윤리·책임경영</h3>
 <p class="amp-prose">창조적 혁신을 통해 사회적 가치를 실현하는 책임 있는 경영을 추구합니다.</p>
 <div class="amp-grid c4">{values}</div>''')
 
+    # 출처: AMP 제공 「홈페이지 자료 정리_MW_20261102-2.pptx」 주요 연혁 + 제증명서(261102) 문서 일자
     tl = [
-        ("2026", "스마트제조 전환지원 사업, AI솔루션 구축지원 사업 등 수행 " + todo("공개 가능 범위 AMP 확인")),
-        ("2026.03", "벤처기업 확인 (혁신성장유형, 유효기간 2029.03.16까지)"),
-        ("2025.12", "지점 등록 (여수 융합지구)"),
-        ("2025.11", "전라남도지사 표창 (벤처기업인으로서 지역경제 활성화 공로)"),
-        ("2025.10", "뿌리기업 확인 (한국생산기술연구원, 유효기간 2028.10.20까지)"),
-        ("2025.01", "유한회사 에이엠피 사업 개시"),
-        ("2024.11", "광주·전남지방중소벤처기업청장 상장 (모범적인 기업경영)"),
-        ("이전", "기존 연혁 이관 " + todo("현 홈페이지 company 연혁 원문 붙여넣기")),
+        ("2026.10", ["전남한국줄넘기협회 저변확대 및 상생협력 협약"]),
+        ("2026.09", ["2026 중국 샤먼 국제무역투자상담회 참가 – 현지 기관·기업 4곳과 업무협력 협약",
+                     "ISO 9001:2015 인증 갱신 (유효기간 2029.09.07까지)"]),
+        ("2026.04", ["국립순천대학교 가족회사 인증", "한영대학교 산학협력 협약 및 산학협력위원회 위촉"]),
+        ("2026.03", ["벤처기업 확인 (혁신성장유형, 제20260317030006호)"]),
+        ("2026.02", ["국립순천대학교 인공지능 중심대학 사업 협약"]),
+        ("2025.12", ["지점 등록 (융합지구 – 여수 주삼동)"]),
+        ("2025.11", ["전라남도지사 표창장 수여"]),
+        ("2025.10", ["연구전담부서 설립 (제2025155989호)", "뿌리기업 확인 (제25122-28120호)"]),
+        ("2025.09", ["광양시 이차전지 산업 상호협력 업무협약 (광양시·전남테크노파크 및 13개사)"]),
+        ("2025.08", ["지점 및 공장 등록 (광양국가산업단지 – 광양 태인동)", "전라남도 청년기업 인증",
+                     "국립순천대학교 글로컬대학 및 RISE사업 업무협약", "전남대학교 그린바이오 혁신융합대학사업단 산학협력 협약"]),
+        ("2025.07", ["전남형 청년창업사관학교 1기 입교", "국립순천대학교 「G-SCNU 강소지역기업」 지정"]),
+        ("2025.05", ["본점 이전 – 광양만권 소재부품 지식산업센터(광양 익신산단) 및 전남테크노파크 입주"]),
+        ("2025.01", ["법인 전환 – 유한회사 에이엠피 및 공장 이전"]),
+        ("2024.11", ["광주·전남지방중소벤처기업청장 상장 수여"]),
+        ("2024.04", ["2024년 청년창업사관학교(전남 14기) 수행 완료"]),
+        ("2023.09", ["ISO 9001:2015 인증"]),
+        ("2023.04", ["에이엠피(AMP) 설립", "2023년 예비창업패키지(전남) 수행 완료"]),
+        ("2023.03", ["1인 창조기업 입주 – 전남여수산학융합원", "제조 공장 설립 (전남 광양)"]),
     ]
     company_page("/default/company/history.html", "연혁 | 에이엠피",
-        "에이엠피의 주요 연혁 – 뿌리기업·벤처기업 확인, 전라남도지사 표창, 여수 지점 등록 등.", "연혁",
-        '<ol class="amp-timeline" style="max-width:760px">' + "".join(f"<li><time>{a}</time>{b}</li>" for a, b in tl) + "</ol>")
+        "에이엠피의 주요 연혁 – 2023년 설립, 2025년 법인 전환, 뿌리기업·벤처기업 확인, 연구전담부서 설립, 대학·지자체 협약.", "연혁",
+        '<ol class="amp-timeline" style="max-width:760px">' +
+        "".join(f"<li><time>{a}</time>{'<br>'.join(b)}</li>" for a, b in tl) + "</ol>")
 
     company_page("/default/company/organization.html", "조직도 | 에이엠피",
         "에이엠피 조직도 – 대표이사, 생산팀, 품질·설계, 연구전담부서.", "조직도",
@@ -429,24 +470,58 @@ def build_company():
 
     def cert(n, cap, sub):
         return f'<figure class="amp-cert amp-figure">{img(n, cap)}<figcaption>{cap}<small>{sub}</small></figcaption></figure>'
+    def certgrid(items):
+        return '<div class="amp-grid c4 certs">' + "".join(cert(*c) for c in items) + "</div>"
     company_page("/default/company/certification.html", "인증 및 제증명 | 에이엠피",
-        "에이엠피의 벤처기업확인서, 뿌리기업확인서, ISO 9001, 전라남도지사 표창, 중소벤처기업청장 상장.", "인증 및 제증명",
-        f'''<div class="amp-grid c4">{cert("cert-venture", "벤처기업확인서", "혁신성장유형 · 2026.03.17 ~ 2029.03.16")}{cert("cert-root", "뿌리기업확인서", "2025.10.21 ~ 2028.10.20")}{cert("award-jeonnam", "전라남도지사 표창장", "2025.11.19")}{cert("award-smba", "중소벤처기업청장 상장", "2024.11.14")}</div>
-<div class="amp-box" style="margin-top:28px"><h3>ISO 9001:2015</h3><p>품질경영시스템 인증을 보유하고 있습니다. {todo("ISO 9001 인증서 이미지 수령 후 추가")}</p></div>''')
+        "에이엠피의 ISO 9001 인증, 벤처기업·뿌리기업 확인서, 연구개발전담부서 인정서, 공장등록, 전라남도 청년기업 인증, 수상 내역.", "인증 및 제증명",
+        '<h2>인증·확인</h2>' + certgrid([
+            ("cert-iso", "ISO 9001:2015 품질경영시스템", "한국품질보증원 · 2026.09.08 ~ 2029.09.07"),
+            ("cert-venture", "벤처기업확인서", "혁신성장유형 · 2026.03.17 ~ 2029.03.16"),
+            ("cert-root", "뿌리기업확인서", "한국생산기술연구원 · 2025.10.21 ~ 2028.10.20"),
+            ("cert-rnd", "연구개발전담부서 인정서", "한국산업기술진흥협회 · 2025.10.14"),
+            ("cert-factory", "공장등록증명서", "한국산업단지공단 · 광양국가산업단지"),
+            ("cert-youth", "전라남도 청년기업 인증서", "전라남도 · 2025.08.25 ~ 2028.08.24"),
+            ("cert-gscnu", "G-SCNU 강소지역기업 지정서", "국립순천대학교 · 2025.07.10"),
+            ("cert-family", "가족회사 인증서", "국립순천대학교 · 2026.04.30")]) +
+        '<h2 style="margin-top:56px">수상·수료·위촉</h2>' + certgrid([
+            ("award-jeonnam", "전라남도지사 표창장", "2025.11.19"),
+            ("award-smba", "광주·전남지방중소벤처기업청장 상장", "2024.11.14"),
+            ("cert-ycsa", "청년창업사관학교 졸업장", "중소벤처기업진흥공단 · 2025.02.13"),
+            ("appoint-hanyoung", "한영대학교 산학협력위원회 위촉장", "2026.04.27")]))
 
-    partners = [("전남테크노파크", "지역 기업 지원기관"), ("전남대학교", "산학 협력(MOU)"),
-                ("순천대학교", "산학 협력(MOU)"), ("광양시", "이차전지 산업 협약")]
-    company_page("/default/company/partners.html", "협력기관 | 에이엠피",
-        "에이엠피의 협력기관 – 전남테크노파크, 전남대학교, 순천대학교, 광양시 등.", "협력기관",
-        '<div class="amp-grid c4">' + "".join(f'<div class="amp-tile"><b>{a}</b><span>{b}</span></div>' for a, b in partners) +
-        f'</div><p class="amp-prose" style="margin-top:24px">{todo("기존 협력기관 4곳(현 홈페이지 파트너) 추가")}</p>')
+    # 협약서: 제증명서(261102) 폴더 기준. (기관, 협약명, 일자, 이미지)
+    mous = [
+        ("국내 지자체·기관", [
+            ("광양시·전남테크노파크 외 13개사", "광양시 이차전지 산업 상호협력 및 공동발전 업무협약", "2025.09.24", "mou-gy-battery"),
+            ("전남한국줄넘기협회", "저변확대 및 상생협력 협약", "2026.10.31", "mou-jumprope")]),
+        ("대학", [
+            ("국립순천대학교", "글로컬대학 및 RISE사업 업무협약", "2025.08.14", "mou-scnu-rise"),
+            ("국립순천대학교", "인공지능 중심대학 사업 상호협력 협약", "2026.02.09", "mou-scnu-ai"),
+            ("전남대학교 그린바이오 혁신융합대학사업단", "산학협력 협약", "2025.08.29", "mou-jnu"),
+            ("한영대학교", "산학협력 협약", "2026.04.24", "mou-hanyoung")]),
+        ("해외 (중국 샤먼 국제무역투자상담회)", [
+            ("강소성 화이안시 인민정부 주상해 투자유치국", "업무협력 협약", "2026.09.08", "mou-huaian"),
+            ("샤먼 JIMEI International Cooperation Center", "업무협력 협약", "2026.09.09", "mou-jimei"),
+            ("ERAGON Enviro", "업무협력 협약", "2026.09.09", "mou-eragon"),
+            ("Unisol Membrane · Jiarong Technology", "업무협력 협약", "2026.09.10", "mou-unisol")]),
+    ]
+    mou_html = ""
+    for grp, rows in mous:
+        mou_html += f'<h2 style="margin-top:48px">{grp}</h2>' + certgrid([(im, org, f"{name} · {d}") for org, name, d, im in rows])
+    tiles = [("전남테크노파크", "입주 기업 · 이차전지 협의체"), ("광양시", "이차전지 산업 협의체"),
+             ("국립순천대학교", "가족회사 · 강소지역기업 · RISE·AI 협약"), ("전남대학교", "그린바이오 혁신융합대학 산학협력"),
+             ("한영대학교", "산학협력 협약 · 산학협력위원회"), ("전남여수산학융합원", "1인 창조기업 입주(2023)")]
+    company_page("/default/company/partners.html", "협력기관·협약 | 에이엠피",
+        "에이엠피의 협력기관과 협약 – 광양시 이차전지 협의체, 국립순천대학교·전남대학교·한영대학교 산학협력, 중국 샤먼 업무협력.", "협력기관",
+        '<div class="amp-grid c3">' + "".join(f'<div class="amp-tile"><b>{a}</b><span>{b}</span></div>' for a, b in tiles) + "</div>" + mou_html)
 
     company_page("/default/company/location.html", "오시는 길 | 에이엠피",
         "에이엠피 본점(광양 익신산단), 공장(광양 태인동 국가산단), 지점·연구(여수 주삼동) 위치 안내.", "오시는 길",
         f'''<table class="amp-table">
 <tr><th>본점</th><td>전남 광양시 광양읍 익신산단3길 40, 409호 (광양만권 소재부품 지식산업센터)<br>
 <a href="{MAP_URL}" target="_blank" rel="noopener" style="text-decoration:underline">지도 보기</a></td></tr>
-<tr><th>공장</th><td>전남 광양시 태인동 국가산업단지 {todo("공장 상세 주소")}</td></tr>
+<tr><th>지점·공장</th><td>전남 광양시 태인5길 51-17, 가동 1층 (광양국가산업단지, 태인동)<br>
+<a href="https://map.naver.com/p/search/{urllib.parse.quote("전남 광양시 태인5길 51-17")}" target="_blank" rel="noopener" style="text-decoration:underline">지도 보기</a></td></tr>
 <tr><th>지점·연구</th><td>전남 여수시 주삼동 (여수 융합지구) {todo("여수 지점 호수 106호 vs 202-01 확인")}</td></tr>
 <tr><th>전화</th><td>{todo("대표번호")}</td></tr></table>''')
 
@@ -458,10 +533,10 @@ def build_air():
                 f'<section class="amp-sec"><div class="amp-wrap">{inner}</div></section>')
         write(path, title, desc, body, "air")
 
-    gal = "".join(f'<figure>{img(n, a)}</figure>' for n, a in [
-        ("product-header-pipe", "Clad Aluminum Header Pipe"), ("product-pipe-assembly", "Clad Aluminum Pipe 및 Assembly"),
-        ("product-heat-exchanger", "알루미늄 열교환기"), ("product-atf-warmer", "ATF Warmer"),
-        ("product-ev-cooler", "전기차 배터리 Cooler"), ("product-tube-stack", "알루미늄 튜브 적층 가공품")])
+    gal ="".join(f'<figure class="rv">{img(n, a)}<figcaption>{a}</figcaption></figure>' for n, a in [
+        ("product-header-pipe", "Clad Aluminum Header Pipe"), ("product-pipe-assembly", "Clad Aluminum Pipe 가공품"),
+        ("product-heat-exchanger", "열교환기(Condenser) – 표시 부분이 Header Pipe"), ("product-atf-warmer", "ATF Warmer"),
+        ("product-ev-cooler", "전기차 배터리 Cooler 적용 분야"), ("product-tube-stack", "실내기(증발기)")])
     air_page("/default/air/products.html", "제품 소개", "Clad Aluminum Header Pipe 제조 | 에이엠피",
         "Clad AL Header Pipe, Clad AL Pipe & Assembly, ATF Warmer, 전기차 배터리 Cooler, D-type 실내기(증발기) 등 공조부품을 제조합니다.",
         f'''
@@ -477,10 +552,19 @@ def build_air():
   </div>
   <figure class="amp-figure">{img("air-diagram-clad", "알루미늄 클래딩 라인과 클래드 판재 단면 도식")}<figcaption>용융점이 서로 다른 알루미늄 클래드 판재</figcaption></figure>
 </div>
+<h2 style="margin-top:56px">고객 문제와 에이엠피의 해결 방식</h2>
+<p class="amp-prose">고객: 자동차·에어컨 공조부품 제조사, 전기차 배터리 Cooler 부품</p>
+<div class="amp-grid c3">{"".join(f'<div class="amp-card rv d{i + 1}"><div class="body"><span class="tag air">{t}</span>{checks(items)}</div></div>' for i, (t, items) in enumerate([
+    ("고객 문제", ["기존 외주 업체의 품질 관리 미숙", "Q-Cost(품질비용) 과다 발생", "공조기 규격에 따른 사이징 필요", "품질 향상을 위한 형상 변경 필요"]),
+    ("해결 방식", ["당사 노하우에 따른 외주 업체 품질 요인 관리", "생산 조건 관리", "금형 설계"]),
+    ("기대 효과", ["신규 개발품을 통한 매출 증대", "Q-Cost 절감을 통한 수익률 증대"])]))}</div>
 <h2 style="margin-top:56px">주력 제품</h2>
 <ul class="amp-prose"><li>Clad Aluminum Header Pipe</li><li>Clad AL Pipe &amp; Assembly</li><li>ATF Warmer</li>
 <li>전기차 배터리 Cooler</li><li>D-type 실내기(증발기)</li></ul>
 <div class="amp-gallery" style="margin-top:20px">{gal}</div>
+<h2 style="margin-top:56px">소구경 Al Pipe 인발 설비</h2>
+<p class="amp-prose">3구 인발기와 다이스·플러그로 소구경 알루미늄 파이프를 가공합니다.</p>
+{gallery([("equip-drawing", "3구 인발기"), ("equip-dies", "다이스 및 플러그(좌), 소구경 Al Pipe(우)")], "c2")}
 {cta("air", "공조부품(Clad AL Header Pipe)", water=False)}''')
 
     qs = "".join(f'<figure class="amp-figure">{img(n, a)}<figcaption>{a}</figcaption></figure>' for n, a in [
@@ -501,6 +585,11 @@ def build_air():
 <li>품질경영시스템 ISO 9001:2015</li></ul></div>
 <div class="amp-gallery" style="margin-top:28px">{qs}</div>
 <p class="amp-prose" style="margin-top:12px">{todo("작업표준서에 고객사명·품번·담당자 실명이 보임 – 게시 범위 AMP 최종 확인(필요 시 해당 부분 가림 처리)")}</p>
+<h2 style="margin-top:56px">공정 설비 자체 제작</h2>
+<p class="amp-prose">생산에 쓰는 가공 설비를 직접 설계·제작합니다. 이 제작 역량이 수처리 설비 제작으로 이어집니다.</p>
+{gallery([("build-01", "가공 설비 제작"), ("build-02", "설비 조립"), ("build-03", "설비 조립·시험"), ("build-04", "제작 완료 설비")], "c4")}
+<h3 style="margin-top:40px">생산라인 구축 과정</h3>
+{gallery([("setup-01", "구조물 제작"), ("setup-02", "세척 설비 설치"), ("setup-03", "절단 라인"), ("setup-04", "생산라인 전경")], "c4")}
 {cta("air", "공조부품", water=False)}''')
 
 
@@ -571,14 +660,23 @@ def build_water():
         "이차전지 폐수처리·망초폐수 재이용 | 에이엠피",
         "이차전지 전구체·양극재 공정의 망초폐수·고염폐수 처리, 전구체 공침반응기(Lab 5L~50L급) 제작, 무방류(ZLD) 지향 공정 설계.",
         "고염·고농도 폐수 처리와 공정수 재이용, 전구체 공침 공정 장비", "pilot-01",
-        "<p>전구체·양극재 공정에서는 고염·고농도 폐수(망초폐수, Na₂SO₄)가 발생합니다.</p><p>폐수 처리비가 늘어나고, 공정수를 확보하는 부담도 함께 커집니다.</p>",
-        flowline([("filter", "전처리", "Micro Filter"), ("tank", "농축탱크", "농축"), ("bolt", "EDR", "전기투석역전"), ("drop", "처리수 재이용", "공정수로 재사용")]) +
-        checks(["중앙 모니터링으로 공정 상태를 확인합니다.",
-                "무방류(ZLD)를 지향하는 공정으로 설계합니다. 실제 공정 구성은 현장 수질에 따라 달라집니다.",
+        "<p>전구체 제조 시 공침 반응·세척 공정에서 과량의 폐수가 발생하고, 양극재 생성 시에는 고농도 염폐수(망초폐수, Na₂SO₄)가 나옵니다.</p>"
+        "<p>폐수가 전 공정에 걸쳐 발생해 기존 종말처리장 처리에 부담이 커지고, 공정수 신규 사용량과 처리 비용도 함께 늘어납니다.</p>",
+        f'''<figure class="amp-figure rv" style="margin:0 0 28px">{img("battery-flow", "이차전지 망초폐수 처리시스템 공정도 – 원수, 필터, EDR 4단, 재사용 공정수 투입, 증발 농축")}<figcaption>이차전지 망초폐수 처리시스템 공정도</figcaption></figure>''' +
+        checks(["처리 공정 도입(전기분해): 필터 전처리 후 EDR 4단 처리로 처리수와 농축수를 분리합니다.",
+                "폐수와 공정수를 재이용수로 만들어 공정에 다시 투입합니다.",
+                "재순환 및 역세 공정으로 생산성을 높이고 부적합률을 줄입니다.",
+                "농축수는 증발 농축해 응집수는 공정수로 다시 쓰고, 슬러지는 분리합니다.",
                 "연계 장비: 전구체 공침반응기(Lab 5L ~ 50L급), pH·투입량 이상 감지 및 제어 프로그램"]) +
-        f'''<div class="amp-split top" style="margin-top:30px">
-  <figure class="amp-figure rv">{img("reactor-diagram-50l", "50L 공침 반응기 구성 개념도")}<figcaption>50L 공침 반응기 구성 개념도</figcaption></figure>
-  <figure class="amp-figure rv d2">{img("zld-diagram", "무방류 ZLD 공정 개념도")}<figcaption>무방류(ZLD) 공정 개념도 – 현장 수질에 따라 공정 구성이 달라집니다</figcaption></figure></div>''',
+        f'''<div class="amp-gallery c2 contain" style="margin-top:30px">
+  <figure class="rv">{img("edr-cell", "EDR 셀 구조도 – 전극, 스페이서, 개스킷, 멤브레인")}<figcaption>EDR(전기투석 반전법) 셀 구조도</figcaption></figure>
+  <figure class="rv">{img("edr-principle", "전기투석 원리 – 음극과 양극 사이에서 이온이 분리되어 농축수와 처리수로 나뉨")}<figcaption>전기투석 원리 – 농축수와 처리수(Product Water) 분리</figcaption></figure>
+  <figure class="rv">{img("precursor", "공침 공정과 전구체·양극재 시료")}<figcaption>공침 공정 및 전구체·양극재</figcaption></figure>
+  <figure class="rv">{img("reactor-diagram-50l", "50L 공침 반응기 구성 개념도")}<figcaption>50L 공침 반응기 구성 개념도</figcaption></figure></div>
+<h3 style="margin-top:36px">기대 효과</h3>''' +
+        checks(["전구체·양극재 공정 폐수 재사용량 증가, 생산 비용 절감",
+                "고농도 염폐수 처리에 따른 환경오염 부하 절감",
+                "재순환으로 공정수 신규 사용량 절감 – 캐즘 이후 재활성화되는 이차전지 시장 대응"]),
         '<p class="amp-prose">이차전지 폐수처리 Pilot, 실험실 맞춤형 공침반응기, 전구체 입자선별·필터 장치를 제작했습니다.</p>' +
         gallery([("pilot-01", "폐수처리 Pilot 시스템"), ("pilot-02", "폐수처리 Pilot 시스템(측면)"),
                  ("reactor-lab-01", "전구체 공침반응기"), ("reactor-lab-02", "공침반응기 제어부"),
@@ -586,6 +684,9 @@ def build_water():
         '<h3>공침반응기 제작 과정</h3>' +
         gallery([("reactor-01", "판재 절단·가공"), ("reactor-02", "스테인리스 용접"), ("reactor-03", "조립·치수 확인"),
                  ("reactor-04", "교반부(임펠러)"), ("reactor-05", "상부 포트·클램프 조립"), ("reactor-site-01", "설치·점검")]) +
+        '<h3>광양시 이차전지 기업 협의체</h3><p class="amp-prose">광양시·전남테크노파크와 이차전지 기업 13개사가 참여한 상호협력 업무협약(2025.09)에 참여하고 있습니다.</p>' +
+        gallery([("gy-battery-01", "광양시 이차전지 산업 상호협력 업무협약식"), ("gy-battery-02", "광양시 이차전지 기업협의체 간담회"),
+                 ("gy-battery-03", "광양경제포럼 – 이차전지 특화단지")]) +
         f'<p class="amp-prose" style="margin-top:12px">{todo("고객사명은 익명(S社) 표기 유지 – 공개 범위 AMP 확인")}</p>')
 
     field_page("/default/water/recycle.html", "recycle", "공정수 재순환", "공정수 재순환",
@@ -602,10 +703,24 @@ def build_water():
         "육상양식 수처리·수질 모니터링 | 에이엠피",
         "RAS·바이오플락(BFT) 육상양식장의 수질 센서·컨트롤러, 순환여과 수처리, 미생물 자동 배양수조, 원격 모니터링을 제공합니다.",
         "RAS·BFT 양식장의 수질을 데이터로 관리합니다", "aqua-05",
-        "<p>RAS·바이오플락(BFT) 양식장은 수질 관리가 경험에 의존하는 경우가 많습니다.</p><p>수온·pH·DO가 급변하면 대량 폐사로 이어질 위험이 있습니다.</p>",
-        flowline([("filter", "순환여과 수처리", "수질 정화"), ("activity", "수질 센서·컨트롤러", "pH·DO·온도 등"), ("flask", "미생물 자동 배양수조", "DO·pH·염도·온도 보정"), ("bolt", "원격 대시보드·알림", "이상 시 알림")]) +
+        "<p>육상양식장은 아질산·DO·탁도(SS) 변동에 민감해, 수질이 흔들리면 대량 폐사로 이어질 위험이 있습니다.</p>"
+        "<p>지금은 물교환에 의존하는 곳이 많아 교체수 확보와 배출수 처리 비용이 계속 듭니다.</p>",
+        flowline([("filter", "순환여과 수처리", "폐해수 재이용수화"), ("activity", "실시간 모니터링", "대시보드·알림"), ("tank", "농축수·슬러지 분리", "환경 리스크 최소화"), ("target", "권장 조치 가이드", "이상 시 대응 안내")]) +
+        checks(["물관리 시스템화: 순환여과 방식으로 폐해수를 처리해 재이용수로 재순환합니다.",
+                "농축수와 슬러지를 분리 관리해 환경 리스크를 줄이고, 슬러지 자원화(액비·비료 등)로 확장합니다.",
+                "실시간 모니터링·대시보드와 권장 조치 가이드를 제공합니다.",
+                "물관리 센터 1개와 양식장 10개소를 묶는 군락형 패키지 모델을 설계합니다."]) +
+        f'''<figure class="amp-figure rv" style="margin:28px 0 0">{img("aqua-flow", "육상양식 물관리 시스템 공정도 – 1차 여과, 가압부상조, 폭기조, 반응조, 2차 여과, 배양 수조, 재이용수 투입")}<figcaption>육상양식 물관리 시스템 공정도</figcaption></figure>
+<figure class="amp-figure rv" style="margin:20px auto 0;max-width:900px">{img("aqua-tech", "육상양식장 재순환 물관리 시스템 기술 개요도")}<figcaption>육상양식 물관리 시스템 기술 개요도</figcaption></figure>
+<figure class="amp-figure rv" style="margin-top:20px">{img("aqua-package", "물관리 센터 1개와 양식장 10개소 군락 패키지 모델 개요도")}<figcaption>물관리 센터형 패키지 모델 개요도 (물관리 센터 1개 + 양식장 10개소 군락)</figcaption></figure>
+<h3 style="margin-top:36px">기대 효과</h3>''' +
+        checks(["신규 유입수 절감", "배출수 오염 부하 절감"]) +
         f'<p class="amp-prose">연계 과제: 미생물 자동 배양수조 개발 (블루스타트업) {todo("과제 완료 후 사진 추가, 대외 표기 가능 여부 확인")}</p>',
-        checks(["양식어가 수질 센서 및 물관리 시스템 검증 (2025)", "무안 소재 양식장 유지보수"]) +
+        checks(["양식어가 수질 센서 및 물관리 시스템 검증 (2025)", "무안 소재 양식장 유지보수",
+                "육상양식 물관리 시스템 시작품 제작 – 필터, 수조, 폭기조"]) +
+        '<h3>시작품 제작</h3>' +
+        gallery([("aqua-proto-01", "필터 시작품"), ("aqua-proto-02", "수조 용접 제작"), ("aqua-proto-03", "수조·폭기조 제작"), ("aqua-proto-04", "수조 시운전")], "c4") +
+        '<h3>양식장 현장</h3>' +
         gallery([("aqua-01", "육상양식 수조 현장"), ("aqua-02", "원형 수조"), ("aqua-05", "양식장 수조 전경"),
                  ("aqua-06", "수조 수질 상태"), ("aqua-07", "수조 점검"), ("aqua-04", "수조 표면 상태")]) +
         f'<p class="amp-prose" style="margin-top:12px">{todo("고객은 C社(양식어가) 익명 – 양식장 위치 노출 가능 여부 확인")}</p>')
@@ -617,14 +732,17 @@ def build_water():
         "<p>제약·화학 공정은 원수 성상이 현장마다 달라, 표준 설비만으로는 처리 목표를 달성하기 어렵습니다.</p>",
         flowline([("flask", "원수 분석", "성상 파악"), ("target", "공정 구성", "처리목표 기반"), ("tank", "맞춤 제작", "소규모·Pilot"), ("play", "설치·시운전", "처리 확인")]) +
         checks(["원수 분석 결과를 기준으로 공정을 구성합니다.", "소규모·Pilot 규모부터 맞춤 제작합니다."]),
-        '<p class="amp-prose">제약공정 수처리 시스템을 제작·설치했습니다.</p>' +
-        gallery([("pharma-01", "제약공정 수처리 시스템"), ("pharma-02", "제약공정 수처리 시스템(다른 각도)")], "c2"))
+        '<p class="amp-prose">제약 공정 수처리 시설 설치 공사를 수행했습니다. 수조 구조물 제작부터 배관·설비 설치까지 진행했습니다.</p>' +
+        gallery([("pharma-01", "수처리 설비 반입·설치"), ("pharma-02", "수처리 설비 설치"), ("pharma-03", "수조 구조물 제작"),
+                 ("pharma-04", "수조 구조물 제작"), ("pharma-06", "수조 프레임 용접"), ("pharma-07", "처리 설비 배관"),
+                 ("pharma-08", "처리 설비 배관·펌프"), ("pharma-05", "설치 완료 수조")], "c4"))
 
 
 # ───────────────────────── 시공사례 ─────────────────────────
 def build_portfolio():
     def card(n, alt, cat, tag, title, text, meta, tagcls=""):
-        im = f'<div class="imgwrap">{img(n, alt)}</div>'
+        im = img(n, alt)
+        im = f'<div class="imgwrap">{im}</div>' if im else ""
         return (f'<div class="amp-card rv" data-cat="{cat}">{im}<div class="body"><span class="tag {tagcls}">{tag}</span>'
                 f'<h3>{title}</h3><p>{text}</p><div class="meta">{meta}</div></div></div>')
 
@@ -633,7 +751,10 @@ def build_portfolio():
         card("pilot-01", "이차전지 폐수처리 Pilot", "battery", "이차전지", "이차전지 폐수처리 Pilot", "고염 폐수 처리 공정을 시험하는 Pilot 설비 제작.", ""),
         card("module-a1", "공정수 재순환 시스템", "recycle", "공정수", "공정수 재순환 현장 맞춤형 시스템", "현장 조건에 맞춘 재순환 모듈 제작.", ""),
         card("module-b1", "전구체 입자선별 및 필터 장치", "battery", "이차전지", "전구체 입자선별 및 필터 장치", "전구체 입자 선별용 필터 장치 제작.", "고객: S社(양극재)"),
-        card("pharma-01", "제약공정 수처리 시스템", "pharma", "제약·화학", "제약공정 수처리 시스템", "제약공정 수처리 시스템 제작·설치.", ""),
+        card("pharma-01", "제약 공정 수처리 시설 설치 공사", "pharma", "제약·화학", "제약 공정 수처리 시설 설치 공사", "수조 구조물 제작과 처리 설비·배관 설치.", ""),
+        card("aqua-proto-01", "육상양식 물관리 시스템 시작품", "aqua", "육상양식", "육상양식 물관리 시스템 시작품", "필터, 수조, 폭기조 시작품 제작.", ""),
+        card("module-a2", "공정수 재순환 시스템", "recycle", "공정수", "공정수 재순환 현장 맞춤형 시스템(2호)", "재순환 모듈 4기 구성.", ""),
+        card("reactor-lab-02", "공침반응기 제어부", "battery", "이차전지", "전구체 공침반응기 제작", "반응기 본체·교반부·제어부 일체 제작.", ""),
         card("monitor-screen", "수질 실시간 모니터링 프로그램 화면", "common", "공통", "수질 실시간 모니터링 프로그램·센서", "pH, EC, 온도, 탁도, TDS, DO 측정 및 데이터 관리.", ""),
         card("aqua-01", "육상양식 수조", "aqua", "육상양식", "양식어가 수질센서·물관리 시스템 검증", "양식 수조 수질 센서와 물관리 시스템을 검증.", "고객: C社(양식어가) · 2025"),
         card("supply-01", "원료 가공·소모품 납품", "battery", "이차전지", "원료 가공·소모품 납품", "이차전지 양극재 공정용 원료 가공 및 소모품 납품.", "고객: S社(양극재) · 2025"),
@@ -647,15 +768,84 @@ def build_portfolio():
     write("/default/portfolio/water.html", "시공사례·납품실적 | 에이엠피",
           "에이엠피의 수처리·공정장비 시공사례와 납품실적 – 공침반응기, 폐수처리 Pilot, 공정수 재순환, 수질 모니터링, 육상양식.", body, "portfolio")
 
-    air = [card("air-case-01", "Clad AL Header Pipe 가공", "air", "공조부품", "Clad AL Header Pipe 가공", "알루미늄 클래드 파이프 가공품.", "", "air"),
-           card("air-case-02", "Clad AL Pipe 및 Assembly", "air", "공조부품", "Clad AL Pipe 및 Assembly", "파이프 및 조립품.", "", "air"),
-           card("air-case-03", "열교환기용 부품", "air", "공조부품", "열교환기용 부품", "자동차·가정용 에어컨 열교환기 적용.", "", "air")]
+    air = [card("air-case-01", "Clad AL Header Pipe 적재", "air", "공조부품", "차량용 Clad AL Header Pipe 생산", "차량 공조부품용 Clad AL Header Pipe 가공·적재.", "", "air"),
+           card("air-case-02", "Clad AL Header Pipe 포장", "air", "공조부품", "가공품 검사·포장", "검사를 마친 가공품을 박스 단위로 포장.", "", "air"),
+           card("air-case-03", "Clad AL Header Pipe 출고", "air", "공조부품", "고객사 출고", "포장한 제품을 차량에 실어 고객사로 출고.", "", "air")]
+    prod = gallery([("air-prod-05", "가공 라인"), ("air-prod-06", "설비 구조물 제작"), ("air-prod-07", "설비 제작"),
+                    ("air-prod-08", "절단 가공품"), ("air-prod-09", "가공품 적재"), ("air-prod-10", "생산 현장")])
     body = (subhead("공조부품 실적", ["시공사례·납품실적", "공조부품 실적"], "Clad AL Header Pipe 등 공조부품 가공·납품 실적입니다.", kind="air") +
             localnav("portfolio", "/default/portfolio/air.html") +
             f'<section class="amp-sec"><div class="amp-wrap"><div class="amp-grid c3">{"".join(air)}</div>'
+            f'<h2 style="margin-top:56px">차량용 Clad AL Header Pipe 제작 및 출고</h2>{prod}'
                         f'{cta("air", "공조부품", water=False)}</div></section>')
     write("/default/portfolio/air.html", "공조부품 납품실적 | 에이엠피",
           "에이엠피의 Clad AL Header Pipe 등 공조부품 가공·납품실적.", body, "portfolio")
+
+
+# ───────────────────────── 홍보센터 ─────────────────────────
+# 출처: AMP 제공 PPTX 14쪽 「뉴스 및 보도자료」 링크. 제목·날짜는 각 기사 페이지 기준(2026-11-03 확인).
+# title이 None인 항목은 기사 페이지를 열 수 없어 제목·날짜를 확인하지 못한 것 – AMP 확인 후 채운다.
+NEWS = [
+    ("2026.09.21", "인더스트리뉴스", "[포토] 전남광양스마트그린산단, 이차전지 전주기 밸류체인 구축 전략 소개",
+     "배터리코리아 2026 광양 스마트그린산단 공동관", "https://www.industrynews.co.kr/news/articleView.html?idxno=86403"),
+    ("2026.03.16", "포커스N전남", "청년 창업가들 한자리에… 전남·광주 창업 정책 논의",
+     "안명원 대표, 청년창업포럼 준비위원장으로 간담회 주관", "https://www.focusnjn.com/article/1065599369053877"),
+    ("2025.11.14", "국립순천대학교", "국립순천대 육성 강소지역기업, 2025 전남 벤처·스타트업 페스티벌서 두각",
+     "G-SCNU 강소지역기업으로 우수제품 홍보관 참여",
+     "https://www.scnu.ac.kr/SCNU/na/ntt/selectNttInfo.do?nttSn=281285119&mi=9097&currPage=1&listCo=10&searchType=sj&nttSttus=&searchValue=%EB%B2%A4%EC%B2%98"),
+    ("2025.11.07", "포커스N전남", "(유)에이엠피, 제1회 전남 벤처·스타트업 페스티벌 참여 및 혁신 수처리 기술 선보여",
+     "친환경 수처리·수질 모니터링 시스템 소개", "https://www.focusnjn.com/article/1065623432630770"),
+    ("2025.09.29", "광양시민신문", "광양시 '이차전지 기업 협의체' 발족",
+     "광양시 이차전지 기업 협의체 발족", "https://www.gycitizen.com/news/articleView.html?idxno=50141"),
+    ("2025.09.25", "매일일보", "광양시, '이차전지 기업 협의체' 발족…지역 산업 경쟁력 강화",
+     "광양시 이차전지 기업 협의체 발족", "https://www.m-i.kr/news/articleView.html?idxno=1286696"),
+    ("2025.04.11", "데일리저널", "대한청년기업인협회 국회서 출범식 개최…'청년미래 선도할 것'",
+     "대한청년기업인협회 출범식", "https://www.dailyjn.com/news/articleView.html?idxno=87626"),
+    ("2025.01.14", "TBN 전남광주교통방송", "TBN차차차 \"태어난 김에 사장 한 번?\" [AMP 안명원 대표와 함께]",
+     "라디오 방송 출연 (YouTube 다시보기)", "https://youtube.com/live/tguODB7HDDE?feature=shared"),
+    (None, "아시아경제", None, "", "https://n.news.naver.com/article/277/0005791858?sid=102"),
+    (None, "헤럴드경제", None, "", "https://n.news.naver.com/article/016/0002487472?sid=102"),
+    (None, "내외뉴스통신", None, "", "https://www.naewaynews.com/316487"),
+    (None, "gndnews.co.kr", None, "", "https://www.gndnews.co.kr/news/articleView.html?idxno=260"),
+]
+
+EVENTS = [  # (제목, 시기, 이미지 접두어, 장수)
+    ("2026 중국 샤먼 국제무역투자상담회", "2026.09 · 광양시 대표단 참가, 현지 기관·기업 업무협력 협약", "ev-xiamen26", 12),
+    ("2026 배터리 코리아", "2026 · 광양 스마트그린산단 공동관", "ev-bk26", 3),
+    ("2026 제5회 전남·광주 해외수출페스티벌", "2026", "ev-export26", 3),
+    ("2025 전남 벤처·스타트업 페스티벌", "2025.11", "ev-venture25", 4),
+    ("2025 전남형 청년창업사관학교 입교식", "2025.07", "ev-ycsa25", 4),
+]
+
+
+def news_list(items):
+    lis = []
+    for d, outlet, title, sub, url in items:
+        t = title or f'{outlet} 기사 {todo("기사 제목·날짜 확인")}'
+        s = f"<small>{sub}</small>" if sub else ""
+        lis.append(f'<li><a href="{url}" target="_blank" rel="noopener"><time>{d or "-"}</time>'
+                   f'<div><b>{t}</b>{s}</div><span class="src">{outlet} ↗</span></a></li>')
+    return '<ul class="amp-news">' + "".join(lis) + "</ul>"
+
+
+def build_pr():
+    def pr(path, h1, title, desc, inner):
+        body = (subhead(h1, ["홍보센터", h1], bg="ev-xiamen26-08") + localnav("pr", path) +
+                f'<section class="amp-sec"><div class="amp-wrap">{inner}</div></section>')
+        write(path, title, desc, body, "pr")
+
+    pr("/default/pr/news.html", "언론보도", "언론보도 | 에이엠피",
+       "에이엠피 관련 언론보도와 방송 – 전남 벤처·스타트업 페스티벌, 광양시 이차전지 기업 협의체, 배터리코리아 등.",
+       '<p class="amp-prose">제목을 누르면 기사 원문(외부 사이트)이 새 창으로 열립니다.</p>' + news_list(NEWS))
+
+    secs = []
+    for t, when, pre, n in EVENTS:
+        items = [(f"{pre}-{i:02d}", t) for i in range(1, n + 1)]
+        figs = "".join(f'<figure class="rv">{img(k, f"{a} 현장 사진 {i}")}</figure>' for i, (k, a) in enumerate(items, 1))
+        secs.append(f'<div class="amp-evt"><h2>{t} <small>{when}</small></h2><div class="amp-gallery c4">{figs}</div></div>')
+    pr("/default/pr/gallery.html", "활동 사진", "활동 사진 | 에이엠피",
+       "에이엠피의 전시·박람회·투자상담회 활동 사진 – 중국 샤먼 국제무역투자상담회, 배터리 코리아, 전남 벤처·스타트업 페스티벌.",
+       "".join(secs))
 
 
 # ───────────────────────── 고객센터 ─────────────────────────
@@ -751,6 +941,7 @@ TODO_INFO = {
     "작업표준서에 고객사명·품번·담당자 실명이 보임 – 게시 범위 AMP 최종 확인(필요 시 해당 부분 가림 처리)": ("공개 범위 확인", "작업표준서 3장에 보이는 고객사명·품번·담당자 실명의 게시 여부 (안 되면 가림 처리본 필요)"),
     "과제 완료 후 사진 추가, 대외 표기 가능 여부 확인": ("공개 범위 확인", "블루스타트업 '미생물 자동 배양수조' 과제를 대외 표기해도 되는지, 완료 후 사진"),
     "보유기간 AMP 확인": ("공개 범위 확인", "문의 개인정보 보유기간 (현재 임의로 '1년' 기재)"),
+    "기사 제목·날짜 확인": ("회사 내용", "언론보도 4건(아시아경제·헤럴드경제·내외뉴스통신·gndnews 링크)의 기사 제목·날짜 – 외부에서 기사 페이지가 열리지 않아 확인하지 못함"),
     "기존 게시판(DB 연동) 페이지와 연결하거나, 공지가 생기면 이 화면에 목록 추가": ("서버·운영", "기존 공지사항 게시판(DB) 연결 여부 / 등록할 공지"),
 }
 CAT_ORDER = ["연락처", "회사 내용", "공개 범위 확인", "서버·운영"]
@@ -778,7 +969,7 @@ def build_photo_list():
 
     L = ["# 공백으로 남은 곳 · 필요한 자료 목록", "",
          f"- 기준일: {datetime.date.today().isoformat()} (자동 생성 문서 – 직접 고치지 말고 `tools/build_draft.py` 수정 후 `python3 tools/build_draft.py` 재실행)",
-         "- 대상: `site_draft/` 초안 사이트 19페이지",
+         f"- 대상: `site_draft/` 초안 사이트 {len(set(PAGES))}페이지",
          f"- 요약: **사진 자리 {len(photos)}곳**(필수 {len(req)}·선택 {len(photos) - len(req)}), **정보·확인 공백 {n_todo}종**, 공통 자산 6종",
          "- 화면 표시: 사진 자리는 점선 박스(\"사진 필요\"), 정보 공백은 노란색 `[ ]` 표식으로 보입니다.", "",
          "---", "", "## 1. AMP에 요청할 것 (체크리스트)", "",
@@ -800,10 +991,10 @@ def build_photo_list():
         L.append("")
     L += ["### F. 사진 외 공통 자산", "",
           "| ☐ | 항목 | 용도 | 비고 |", "|---|---|---|---|",
-          "| ☐ | 로고 원본(AI/SVG 또는 투명 PNG) | 헤더·푸터·파비콘 | 지금은 현 홈페이지 캡처를 잘라 쓴 임시본(`logo-t.png`, 해상도 낮음) |",
+          "| ☐ | 로고 원본(AI/SVG) | 헤더·푸터·파비콘 | 2026-11-03 AMP 제공 PPTX의 투명 PNG(370×101)로 교체함. 고해상도 원본이 있으면 다시 교체 |",
           "| ☐ | 작업표준서 공개본(고객사명·품번·담당자 실명 가림) | 공조부품 > 생산·품질 | D의 작업표준서 건이 '게시 불가'일 때만 필요. 지금은 원본 그대로 사용 중 |",
-          "| ☐ | 인물이 나온 사진 사용 동의 | 이차전지 폐수처리 > 공침반응기 제작 과정 | 대상: `reactor-02`(용접), `reactor-site-01`(설치·점검). 동의 불가 시 해당 컷 제외 |",
-          "| ☐ | 인증서 번호 마스킹 여부 | 인증 및 제증명, 메인 신뢰 지표 | 벤처·뿌리기업 확인서에 사업자등록번호·법인번호·QR가 보임 |",
+          "| ☐ | 인물이 나온 사진 사용 동의 | 이차전지 폐수처리 > 공침반응기 제작 과정, 홍보센터 > 활동 사진 | 대상: `reactor-02`(용접), `reactor-site-01`(설치·점검), 행사 사진(AMP가 PPTX로 제공). 동의 불가 시 해당 컷 제외 |",
+          "| ☐ | 인증서 번호 마스킹 여부 | 인증 및 제증명, 메인 신뢰 지표 | 벤처·뿌리기업·ISO 등에 사업자등록번호·법인번호·QR가 보임. 청년기업 인증서의 대표자 생년월일은 가림 처리함 |",
           "| ☐ | 미생물 자동 배양수조 사진 | 육상양식 물관리 | 블루스타트업 과제 완료 후. 현재 페이지에는 자리 없음(문구만) |",
           "| ☐ | 카페24 FTP 계정 또는 사이트 소스 일체, 관리자 계정 | 실서버 반영, 기존 연혁·파트너·갤러리 이관 | `CLAUDE.md` 미결 사항 1·2번 |",
           "", "---", "", "## 2. 지금 화면에 임의로 채운 것 (승인·검증 필요)", "",
@@ -812,10 +1003,11 @@ def build_photo_list():
           "| 메인 슬로건·히어로 문구 | 메인 | \"현장에 맞춘 설비, 데이터로 관리하는 물\" 등 | AMP 최종 승인 (기획안에서 컬리버 초안) |",
           "| 인사말 | 회사소개 > 인사말 | 수처리 중심으로 새로 작성 | AMP 최종 승인, \"가장 저렴한 가격\" 문구는 삭제함 |",
           "| FAQ 답변 8건 | 고객센터 > FAQ | 기획안의 질문 8개에 컬리버가 답변 작성 | 답변 내용이 실제 응대 방식과 맞는지 |",
-          "| 연혁 \"2025.01 사업 개시\" | 회사소개 > 연혁 | 뿌리기업확인서의 사업개시일 기준 | 법인 사업개시일이 맞는지 |",
+          "| 연혁 | 회사소개 > 연혁 | AMP 제공 PPTX 연혁 16건 + 제증명서 문서 일자로 확인한 협약·인증 10여 건을 합침 | 추가한 항목 공개 여부, PPTX의 \"2023.04 예비창업패키지 수행 완료\" 날짜(표에서 2023.09 다음에 있음) |",
           "| 협력기관 설명문 | 회사소개 > 협력기관 | 전남테크노파크 \"지역 기업 지원기관\" 등 | 표기 문구 |",
           "| 연구전담부서·ISO 9001 | 메인 신뢰 지표 | 기획안 신뢰 지표 문구 그대로 | 인증서·설립 근거 자료 |",
-          "| 공정 도식 2종 | 이차전지 폐수처리 | 50L 공침 반응기 구성도, ZLD 공정 도식 | 출처(자체 제작/사업계획서 여부). ZLD 도식은 EDR 흐름과 달라 \"개념도\"로 표기함 |",
+          "| 50L 공침 반응기 구성도 | 이차전지 폐수처리 | 자료모음 PDF의 영문 도식 | 출처(자체 제작/사업계획서 여부). ZLD 도식은 AMP 제공 EDR 공정도로 교체해 더 이상 쓰지 않음 |",
+          "| 제품·적용 분야 이미지 | 공조부품 > 제품 소개 | ATF Warmer·전기차 배터리·열교환기 이미지(PPTX 4~5쪽) | 외부(제조사·카탈로그) 이미지인지, 게시해도 되는지 |",
           "| 수치 카드 | 메인 | 7단계·4개 분야·6종·3개 인증 | 기획안 수치(프로세스 7단계, 센서 6종)와 일치하는지만 확인 |",
           "", "---", "", "## 3. 사이트에서 공백이 보이는 위치 (페이지별)", ""]
     by_page = {}
@@ -849,6 +1041,7 @@ def main():
     build_air()
     build_water()
     build_portfolio()
+    build_pr()
     build_cscenter()
     build_seo_files()
     build_photo_list()
