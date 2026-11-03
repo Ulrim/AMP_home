@@ -502,11 +502,12 @@ def build_company():
         return ('<div class="amp-card rv"><div class="body"><h3>' + title + '</h3>' +
                 "".join(f'<p style="margin-top:8px">{l}</p>' for l in lines) + '</div></div>')
     partners_html = (
-        '<h3 style="margin-top:0">지자체·산업 협약</h3><div class="amp-grid c2">' +
+        '<h3 style="margin-top:0">지자체·지원기관</h3><div class="amp-grid c2">' +
         pc("광양시 이차전지 산업 상호협력과 공동발전을 위한 업무협약", [
             "2025.09.24 · 광양시와 이차전지 관련 기업이 이차전지 산업 생태계 조성과 산업경쟁력 강화를 위해 협력",
             "참여: 광양시, 전남테크노파크, 포스코퓨처엠, 포스코리튬솔루션, 포스코필바라리튬솔루션, 포스코HY클린메탈, SNNC, CIS케미칼, 광양이엔에스, 에이비알, 에콤, 엘케이엔텍, SE2Material, 에버인더스, 에이엠피"]) +
         pc("전남테크노파크", ["지역 기업 지원기관 · 위 협약에 함께 참여"]) +
+        pc("전남여수산학융합원", ["1인 창조기업 입주 (2023.03)", "창업 보육 인큐베이팅"]) +
         '</div>'
         '<h3 style="margin-top:48px">대학 산학협력</h3><div class="amp-grid c3">' +
         pc("국립순천대학교", ["글로컬대학 및 RISE사업 업무협약 (2025.08.14)", "AI중심대학사업단 상호협력 협약 (2026.02.09)",
@@ -521,7 +522,7 @@ def build_company():
         f'</div><p class="amp-prose" style="margin-top:14px">{todo("중국 협력사 1곳(2026.09.08 협약) 표기명 확인 및 해외 협력사 명칭 공개 동의 확인")}</p>'
         f'<p class="amp-prose" style="margin-top:24px">{todo("기존 협력기관 4곳(현 홈페이지 파트너) 추가")}</p>')
     company_page("/default/company/partners.html", "협력기관 | 에이엠피",
-        "에이엠피의 협력기관 – 광양시 이차전지 산업 협약, 전남테크노파크, 순천대·전남대·한영대 산학협력, 이차전지 폐수처리 해외 협력.", "협력기관", partners_html)
+        "에이엠피의 협력기관 – 광양시 이차전지 산업 협약, 전남테크노파크, 전남여수산학융합원, 순천대·전남대·한영대 산학협력, 이차전지 폐수처리 해외 협력.", "협력기관", partners_html)
 
     company_page("/default/company/location.html", "오시는 길 | 에이엠피",
         "에이엠피 본사(광양 익신산단), 공장·연구전담부서(광양 태인동 국가산단), 지점(여수) 위치 안내.", "오시는 길",
